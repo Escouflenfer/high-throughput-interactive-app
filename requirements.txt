@@ -1,0 +1,5 @@
+# Dependencies for interactive_plot_edx
+
+dash
+openpyxl
+numpy

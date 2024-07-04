@@ -1,0 +1,76 @@
+/* CSS file for app layout*/
+.window_layout{
+    border: solid 0px cyan;
+}
+
+.grid_layout{
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    grid-auto-rows: minmax(auto, auto);
+    grid-gap: 1px 5px;
+    justify-content: center;
+    align-items: center;
+}
+
+.plot_cell{
+    border: solid 0px red;
+    max-width: 100%;
+    display: block;
+    grid-column: 1/4;
+    grid-row: 3;
+}
+
+.cell11{
+    border: solid 0px red;
+    max-width: 100%;
+    height: auto;
+    display: block;
+    grid-column: 1;
+    grid-row: 1;
+}
+
+.cell12{
+    border: solid 0px red;
+    max-width: 100%;
+    height: auto;
+    display: block;
+    grid-column: 2;
+    grid-row: 1;
+
+}
+
+.cell13{
+    border: solid 0px red;
+    max-width: 100%;
+    height: auto;
+    display: block;
+    grid-column: 3;
+    grid-row: 1;
+}
+
+.cell21{
+    border: solid 0px red;
+    max-width: 100%;
+    height: auto;
+    display: block;
+    grid-column: 1;
+    grid-row: 2;
+}
+
+.cell22{
+    border: solid 0px red;
+    max-width: 100%;
+    height: auto;
+    display: block;
+    grid-column: 2;
+    grid-row: 2;
+}
+
+.cell23{
+    border: solid 0px red;
+    max-width: 100%;
+    height: auto;
+    display: block;
+    grid-column: 3;
+    grid-row: 2;
+}

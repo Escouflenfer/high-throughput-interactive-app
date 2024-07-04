@@ -1,0 +1,5 @@
+     Spectrum Boron Carbon Oxygen Silicon  Iron Neodymium Tantalum
+ Spectrum_0_0  0,00   0,00   0,00    0,00 87,14     12,86     0,00
+ Mean          0,00   0,00   0,00    0,00 87,14     12,86     0,00
+ Sigma         0,00   0,00   0,00    0,00  0,00      0,00     0,00
+ SigmaMean     0,00   0,00   0,00    0,00  0,00      0,00     0,00
