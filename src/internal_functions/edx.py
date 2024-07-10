@@ -8,7 +8,7 @@ import pathlib;
 import numpy as np;
 import plotly.graph_objects as go;
 import xml.etree.ElementTree as ET;
-from openpyxl import load_workbook;
+from openpyxl import load_workbook; 
 
 
 def generate_spectra(foldername, x_pos, y_pos):
