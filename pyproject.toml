@@ -1,0 +1,43 @@
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "High-throughput-interactive-app"
+version = "2024.07"
+description = "High throughput data vizualisation and treatment with interactive interface"
+readme = "README.md"
+requires-python = ">=3.8"
+license = {file = "LICENSE"}
+
+authors = [
+    {name = "William Rigaut"}
+]
+
+classifiers = [
+    "Intended Audience :: Education",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Science/Research",
+    "License :: MIT",
+    "Natural Language :: English",
+    "Operating System :: MacOS",
+    "Operating System :: Microsoft :: Windows",
+    "Operating System :: Unix",
+    "Programming Language :: Python :: 3 :: Only",
+    "Topic :: Scientific/Engineering :: Physics",
+    "Topic :: Scientific/Engineering :: Mathematics",
+    "Topic :: Scientific/Engineering :: Visualization"
+]
+
+dependencies = [
+    "dash",
+    "openpyxl",
+    "numpy"
+]
+
+[project.urls]
+repository = "https://github.com/Escouflenfer/High-throughput-interactive-app"
+
+
+[tool.coverage.run]
+omit = ["High-throughput-interactive-app/tests/*"]
