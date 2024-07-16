@@ -1,6 +1,6 @@
 /* CSS file for app layout*/
 .window_layout{
-    border: solid 1px cyan;
+    border: solid 0px cyan;
 }
 
 .grid_layout{
@@ -8,20 +8,20 @@
     grid-template-columns: repeat(3, 1fr);
     grid-template-columns: fit-content(750px) fit-content(1100px);
     grid-auto-rows: minmax(auto, auto);
-    grid-gap: 1px 5px;
+    grid-gap: 0px 5px;
     justify-content: center;
     align-items: center;
 }
 
 .plot_cell_left{
-    border: solid 1px red;
+    border: solid 0px red;
     max-width: 100%;
     display: block;
     grid-column: 0/2;
     grid-row: 3;
 }
 .plot_cell_right{
-    border: solid 1px red;
+    border: solid 0px red;
     max-width: 100%;
     display: block;
     grid-column: 2/4;
@@ -29,7 +29,7 @@
 }
 
 .cell11{
-    border: solid 1px red;
+    border: solid 0px red;
     max-width: 100%;
     height: auto;
     display: block;
@@ -38,7 +38,7 @@
 }
 
 .cell12{
-    border: solid 1px red;
+    border: solid 0px red;
     max-width: 100%;
     height: auto;
     display: block;
@@ -48,7 +48,7 @@
 }
 
 .cell13{
-    border: solid 1px red;
+    border: solid 0px red;
     max-width: 100%;
     height: auto;
     display: block;
@@ -57,7 +57,7 @@
 }
 
 .cell21{
-    border: solid 1px red;
+    border: solid 0px red;
     max-width: 100%;
     height: auto;
     display: block;
@@ -66,7 +66,7 @@
 }
 
 .cell22{
-    border: solid 1px red;
+    border: solid 0px red;
     max-width: 100%;
     height: auto;
     display: block;
@@ -75,7 +75,7 @@
 }
 
 .cell23{
-    border: solid 1px red;
+    border: solid 0px red;
     max-width: 100%;
     height: auto;
     display: block;

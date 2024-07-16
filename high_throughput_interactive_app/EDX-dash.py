@@ -146,8 +146,14 @@ def update_spectra(foldername, clickData, xrange, yrange):
     else:
         x_pos = int(clickData["points"][0]["x"])
         y_pos = int(clickData["points"][0]["y"])
-    fig = edx.generate_spectra(foldername, x_pos, y_pos)
-    fig.update_layout(height=750, width=1100)
+
+    fig, meta = edx.generate_spectra(foldername, x_pos, y_pos)
+    fig.update_layout(
+        title=f"EDX Spectrum for {foldername} at position ({x_pos}, {y_pos})",
+        height=750,
+        width=1100,
+        annotations=[meta],
+    )
     fig.update_xaxes(title="Energy (keV)", range=xrange)
     fig.update_yaxes(title="Counts", range=yrange)
     return fig

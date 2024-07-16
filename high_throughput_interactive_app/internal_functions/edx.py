@@ -12,6 +12,81 @@ import xml.etree.ElementTree as ET
 from openpyxl import load_workbook
 
 
+def make_path_name(
+    foldername, x_pos, y_pos, start_x=-40, start_y=-40, step_x=5, step_y=5
+):
+    """Converting X and Y real coordinates to the indices used by bruker to label files during edx scans
+
+    Parameters
+    ----------
+    foldername : STR
+        Folder that contains all the EDX datafiles in the .spx format.
+        Used to read data in the correct path
+    x_pos, ypos : INT, INT
+        Horizontal position X (in mm) and vertical position Y (in mm) on the sample.
+        The EDX scan saved the datafiles labeled by two numbers (a, b) corresponding to the scan number in the x and y positions.
+    start_x, start_y : INT, INT optional
+        Starting X and Y positions of the EDX scan, by default it will always start at (-40, -40)
+    step_x, step_y : INT, INT optional
+        X and Y steps for the EDX scan, by default it will be setup to 5 and 5 (mm)
+
+    Returns
+    -------
+    path_name : STR
+        Full path of the spx file at the (X, Y) position
+    """
+    # Converting wafer position to datafile label number
+    x_idx, y_idx = int((x_pos - start_x) / step_x + 1), int(
+        (y_pos - start_y) / step_y + 1
+    )
+    path_name = pathlib.Path(f"./data/EDX/{foldername}/Spectrum_({x_idx},{y_idx}).spx")
+
+    return path_name
+
+
+def get_spectra_spx(spx_file):
+    """Reading spx datafile exported by the BRUKER software. The function will iter through the file,
+    fetching the needed attributs in the metadata and the actual data to create a Scatter Figure with the plotly module
+
+    Parameters
+    ----------
+    spx_file : STR
+        Path containing the spx file
+
+    Returns
+    -------
+    edx_spectra : NP.ARRAY
+        Numpy array containing the counts as a function of energy
+    """
+    # Metadata to keep for displaying quantification results
+    energy_step = 0.0
+    zero_energy = 0.0
+
+    # Iteration through the XML datafile, searching for important metadata and EDX spectra
+    tree = ET.parse(spx_file)
+    root = tree.getroot()
+    for elm in root.iter():
+        if elm.tag == "PrimaryEnergy":
+            voltage = int(float(elm.text))
+        elif elm.tag == "WorkingDistance":
+            working_distance = float(elm.text)
+        elif elm.tag == "CalibLin":
+            energy_step = float(elm.text)
+        elif elm.tag == "CalibAbs":
+            zero_energy = float(elm.text)
+        elif elm.tag == "Channels":
+            edx_spectra = np.array(
+                [
+                    ((i + 1) * energy_step + zero_energy, int(counts))
+                    for i, counts in enumerate(elm.text.split(","))
+                ]
+            )
+
+    metadata_lst = [voltage, working_distance, energy_step, zero_energy]
+
+    return edx_spectra, metadata_lst
+
+
 def generate_spectra(foldername, x_pos, y_pos):
     """Reading the EDX data from .xml datafile exported by the BRUKER software. The function will iter through the file,
     fetching the needed attributs in the metadata and the actual data to create a Scatter Figure with the plotly module
@@ -30,90 +105,46 @@ def generate_spectra(foldername, x_pos, y_pos):
     fig : FIGURE OBJ
         Figure object from plotly.graph_objects containing a Scatter plot
     """
-    # Defining a dummy Figure object to send when certains conditions are not met
+    # Defining a empty Figure object to send when certains conditions are not met
     empty_fig = go.Figure(data=go.Scatter())
     empty_fig.update_layout(height=700, width=1300)
-    # Converting wafer position to datafile label number
-    start_x, start_y = -40, -40
-    step = 5
-    x_idx, y_idx = int((x_pos - start_x) / step + 1), int((y_pos - start_y) / step + 1)
+    empty_meta = go.layout.Annotation()
 
     # If the user did not select a data folder, the displayed graph will be empty
     if foldername is None:
-        return empty_fig
+        return empty_fig, empty_meta
 
-    filepath = pathlib.Path(f"./data/EDX/{foldername}/Spectrum_({x_idx},{y_idx}).spx")
+    # getting the spectrum from spx file
+    spx_file = make_path_name(foldername, x_pos, y_pos)
+    edx_spectra, metadata = get_spectra_spx(spx_file)
 
-    # Metadata to keep for displaying quantification results
-    params = [
-        "Atom",
-        "XLine",
-        "AtomPercent",
-        "MassPercent",
-        "NetIntens",
-        "Background",
-        "Sigma",
-    ]
-    voltage = 0
-    energy_step = 0.0
-    zero_energy = 0.0
-    results_ext = []
-    element_list = []
-
-    # Iteration through the XML datafile, searching for important metadata and EDX spectra
-    tree = ET.parse(filepath)
-    root = tree.getroot()
-    for elm in root.iter():
-        if elm.tag == "PrimaryEnergy":
-            voltage = int(float(elm.text))
-        elif elm.tag == "WorkingDistance":
-            working_distance = float(elm.text)
-        elif elm.tag == "CalibLin":
-            energy_step = float(elm.text)
-        elif elm.tag == "CalibAbs":
-            zero_energy = float(elm.text)
-        elif elm.tag == "Channels":
-            edx_spectra = np.array(
-                [
-                    ((i + 1) * energy_step + zero_energy, int(counts))
-                    for i, counts in enumerate(elm.text.split(","))
-                ]
-            )
-        elif elm.tag == "ClassInstance" and elm.get("Name") == "Results":
-            for child in elm.iter():
-                if child.tag == "Result":
-                    results_ext.append([])
-                elif child.tag in params:
-                    if child.tag == "Atom" and int(child.text) < 10:
-                        results_ext[-1].append((child.tag, f"0{child.text}"))
-                    else:
-                        results_ext[-1].append((child.tag, child.text))
-                elif child.tag == "ExtResults":
-                    break
-        elif elm.tag == "ClassInstance" and elm.get("Name") == "Elements":
-            for child in elm.iter():
-                if child.get("Type") == "TRTPSEElement":
-                    name_elm = child.get("Name")
-                    for nb in child.iter():
-                        if nb.tag == "Element":
-                            nb_elm = nb.text
-                    element_list.append([int(nb_elm), name_elm])
-
-    # Creating the scatter plot with plotly.graph_objects library and updating title
+    # Creating the scatter plot with plotly.graph_objects library
     fig = go.Figure(
         data=[
             go.Scatter(
                 x=[elm[0] for elm in edx_spectra],
                 y=[elm[1] for elm in edx_spectra],
-                marker_color="purple",
+                marker_color="red",
             )
         ]
     )
-    fig.update_layout(
-        title=f"EDX Spectrum for {foldername} at position ({x_pos}, {y_pos})"
+
+    # Creating the metadata annotation within the plot
+    meta = go.layout.Annotation(
+        text="Voltage: {:} keV<br>Working Distance:{:.5f} mm<br>Zero Energy:{:.5f} eV".format(
+            metadata[0], metadata[1], metadata[3]
+        ),
+        align="left",
+        showarrow=False,
+        xref="paper",
+        yref="paper",
+        x=0.95,
+        y=0.95,
+        bordercolor="black",
+        borderwidth=1,
     )
 
-    return fig
+    return fig, meta
 
 
 def get_elements(foldername, with_plot=False):
