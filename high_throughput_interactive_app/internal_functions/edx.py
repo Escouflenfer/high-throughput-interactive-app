@@ -110,9 +110,7 @@ def generate_spectra(foldername, x_pos, y_pos):
         ]
     )
     fig.update_layout(
-        title=f"EDX Spectrum for {foldername} at position ({x_pos}, {y_pos})",
-        height=700,
-        width=1300,
+        title=f"EDX Spectrum for {foldername} at position ({x_pos}, {y_pos})"
     )
 
     return fig
@@ -214,8 +212,6 @@ def generate_heatmap(folderpath_edx, element_edx):
                 ELM.append(float(row[index]))
 
     fig = go.Figure(data=go.Heatmap(x=X_POS, y=Y_POS, z=ELM, colorscale="Jet"))
-    fig.update_layout(
-        title=f"EDX Heatmap for element {element_edx}", height=800, width=800
-    )
+    fig.update_layout(title=f"EDX Heatmap for element {element_edx}")
 
     return fig
