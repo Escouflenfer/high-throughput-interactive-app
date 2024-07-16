@@ -3,8 +3,8 @@ requires = ["setuptools"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "High-throughput-interactive-app"
-version = "2024.07"
+name = "high_throughput_interactive_app"
+version = "0.5"
 description = "High throughput data vizualisation and treatment with interactive interface"
 readme = "README.md"
 requires-python = ">=3.8"
@@ -33,6 +33,11 @@ dependencies = [
     "dash",
     "openpyxl",
     "numpy"
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest"
 ]
 
 [project.urls]
