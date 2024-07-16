@@ -147,6 +147,7 @@ def generate_spectra(foldername, x_pos, y_pos):
     return fig, meta
 
 
+# need to finish slicing this function
 def get_elements(foldername, with_plot=False):
     """Reading from the Global Spectrum Results.xlsx file, the function will return all the element that were used for the quantification
     but excluding the element that were deconvoluted
