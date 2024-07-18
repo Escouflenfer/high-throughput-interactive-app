@@ -49,13 +49,14 @@ W_yrange_slider = html.Div(
             min=0,
             max=50000,
             step=1000,
-            value=[0, 15000],
+            value=[0, 10000],
             marks={i: f"{i}" for i in range(0, 60000, 10000)},
             id="yrange_slider",
         ),
     ],
     className="cell23",
 )
+# Colorange for heatmap
 W_crange_slider = html.Div(
     children=[
         html.Label("Color Range"),
@@ -111,26 +112,56 @@ app.layout = html.Div(
 )
 
 
+# Update element_edx widget when olderpath is changed by the user
 @callback(Output("element_edx", "options"), Input("folderpath", "value"))
-def update_components(foldername):
+def update_element_edx(folderpath):
     element_edx_opt = []
-    if foldername is not None:
-        element_edx_opt = edx.get_elements(foldername)
+    if folderpath is not None:
+        element_edx_opt = edx.get_elements(folderpath)
     return element_edx_opt
+
+
+# Update crange_slider widget when olderpath or element_edx is changed by the user
+@callback(
+    Output("edx_heatmap", "figure", allow_duplicate=True),
+    Input("folderpath", "value"),
+    Input("element_edx", "value"),
+    Input("edx_heatmap", "figure"),
+    Input("crange_slider", "value"),
+    prevent_initial_call=True,
+)
+def update_crange_slider(folderpath, element_edx, fig, crange):
+    if folderpath is not None and element_edx is not None:
+        fig["data"][0]["zmin"] = min(crange)
+        fig["data"][0]["zmax"] = max(crange)
+
+    return fig
 
 
 @callback(
     Output("edx_heatmap", "figure"),
+    Output("crange_slider", "value"),
     Input("folderpath", "value"),
     Input("element_edx", "value"),
 )
-def update_heatmap(folderpath_edx, element_edx):
-    fig = edx.generate_heatmap(folderpath_edx, element_edx)
+def update_heatmap(folderpath, element_edx):
+    fig = edx.generate_heatmap(folderpath, element_edx)
+
+    # Update the dimensions of the heatmap and the X-Y title axes
     fig.update_layout(height=750, width=750, clickmode="event+select")
     fig.update_xaxes(title="X Position")
     fig.update_yaxes(title="Y Position")
-    fig.data[0].colorbar.title = "Conctr. at.%"
-    return fig
+
+    # Update the colorbar title
+    fig.data[0].colorbar = dict(title="Conctr. at.%")
+
+    # Update the colorbar range
+    crange = [0, 100]
+    if folderpath is not None and element_edx is not None:
+        z_values = fig.data[0].z
+        crange = [min(z_values), max(z_values)]
+
+    return fig, crange
 
 
 @callback(

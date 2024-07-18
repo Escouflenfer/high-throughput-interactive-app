@@ -172,7 +172,7 @@ def generate_spectra(foldername, x_pos, y_pos):
 
     # Creating the metadata annotation within the plot
     meta = go.layout.Annotation(
-        text="Voltage: {:} keV<br>Working Distance:{:.5f} mm<br>Zero Energy:{:.5f} eV".format(
+        text="Voltage: {:} keV<br>Working Distance: {:.5f} mm<br>Zero Energy: {:.5f} eV".format(
             metadata[0], metadata[1], metadata[3]
         ),
         align="left",
@@ -266,5 +266,6 @@ def generate_heatmap(folderpath_edx, element_edx):
 
     fig = go.Figure(data=go.Heatmap(x=X_POS, y=Y_POS, z=ELM, colorscale="Jet"))
     fig.update_layout(title=f"EDX Heatmap for element {element_edx}")
+    fig.data[0].update(zmin=min(ELM), zmax=max(ELM))
 
     return fig
