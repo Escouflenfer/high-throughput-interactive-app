@@ -7,74 +7,10 @@ Internal use for Institut Néel and within the MaMMoS project, to read big datas
 
 import os
 from dash import Dash, html, dcc, Input, Output, callback
+from interface.widgets_edx import WidgetsEDX
 from internal_functions import edx
 
-# Defining all the layout components
-# Folderpath for the EDX spetras (component defined inside a <div>)
-W_folderpath = html.Div(
-    children=[
-        html.Label("Folderpath"),
-        dcc.Dropdown(
-            [elm for elm in os.listdir("./data/EDX/") if not elm.startswith(".")],
-            id="folderpath",
-        ),
-    ],
-    className="cell12",
-)
-# Element component
-W_element = html.Div(
-    children=[html.Label("Element"), dcc.Dropdown([], id="element_edx")],
-    className="cell22",
-)
-# Slider Xrange component
-W_xrange_slider = html.Div(
-    children=[
-        html.Label("Energy Range"),
-        dcc.RangeSlider(
-            min=0,
-            max=20,
-            step=0.1,
-            value=[0, 10],
-            marks={i: f"{i}" for i in range(0, 25, 5)},
-            id="xrange_slider",
-        ),
-    ],
-    className="cell13",
-)
-# Slider Yrange component
-W_yrange_slider = html.Div(
-    children=[
-        html.Label("Counts"),
-        dcc.RangeSlider(
-            min=0,
-            max=50000,
-            step=1000,
-            value=[0, 10000],
-            marks={i: f"{i}" for i in range(0, 60000, 10000)},
-            id="yrange_slider",
-        ),
-    ],
-    className="cell23",
-)
-# Colorange for heatmap
-W_crange_slider = html.Div(
-    children=[
-        html.Label("Color Range"),
-        dcc.RangeSlider(
-            min=0,
-            max=100,
-            step=0.5,
-            value=[0, 100],
-            marks={i: f"{i}" for i in range(0, 105, 5)},
-            id="crange_slider",
-        ),
-    ],
-    className="cell21",
-)
-# EDX spectra graph that will be modified by user interaction
-W_edx_spectra = html.Div([dcc.Graph(id="edx_spectra")], className="plot_cell_right")
-# EDX heatmap
-W_edx_heatmap = html.Div([dcc.Graph(id="edx_heatmap")], className="plot_cell_left")
+children_edx = WidgetsEDX()
 
 # EDX tab with all the components
 edx_tab = dcc.Tab(
@@ -83,13 +19,13 @@ edx_tab = dcc.Tab(
     children=[
         html.Div(
             [
-                W_folderpath,
-                W_element,
-                W_crange_slider,
-                W_xrange_slider,
-                W_yrange_slider,
-                W_edx_heatmap,
-                W_edx_spectra,
+                children_edx.folderpath,
+                children_edx.element,
+                children_edx.crange_slider,
+                children_edx.xrange_slider,
+                children_edx.yrange_slider,
+                children_edx.edx_heatmap,
+                children_edx.edx_spectra,
             ],
             className="grid_layout",
         )

@@ -172,7 +172,7 @@ def generate_spectra(foldername, x_pos, y_pos):
 
     # Creating the metadata annotation within the plot
     meta = go.layout.Annotation(
-        text="Voltage: {:} keV<br>Working Distance: {:.5f} mm<br>Zero Energy: {:.5f} eV".format(
+        text="Voltage: {:} keV<br>Working Distance: {:.5f} mm<br>Zero Energy: {:.5f} keV".format(
             metadata[0], metadata[1], metadata[3]
         ),
         align="left",
