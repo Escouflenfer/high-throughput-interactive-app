@@ -87,6 +87,47 @@ def get_spectra_spx(spx_file):
     return edx_spectra, metadata_lst
 
 
+def make_heatmap(data, element_edx, start_x=-40, start_y=-40, step_x=5, step_y=5):
+    """Fetching every X and Y positions in the xlsx datafile for a given element
+
+    Parameters
+    ----------
+    data : LIST
+        List containing every line of the xlsx file. For each line the name scan is followed by the quantification results for each element
+    element_edx : STR
+        Element that will be displayed in the heatmap
+    start_x, start_y : INT, INT optional
+        Starting X and Y positions of the EDX scan, by default it will always start at (-40, -40)
+    step_x, step_y : INT, INT optional
+        X and Y steps for the EDX scan, by default it will be setup to 5 and 5 (mm)
+
+    Returns
+    -------
+    X_POS, Y_POS : LIST
+        List containing every (X, Y) scan positions for the EDX map
+    ELM : LIST
+        Values of the quantification result at each position
+    """
+    X_POS = []
+    Y_POS = []
+    ELM = []
+
+    for row in data:
+        if row[0] == "Spectrum":
+            index = row.index(element_edx)
+        elif row[0].startswith("Spectrum_"):
+            x_index, y_index = row[0].split("(")[-1].split(")")[0].split(",")
+            x_pos, y_pos = (int(x_index) - 1) * step_x + start_x, (
+                int(y_index) - 1
+            ) * step_y + start_y
+            if np.abs(x_pos) + np.abs(y_pos) <= 60:
+                X_POS.append(x_pos)
+                Y_POS.append(y_pos)
+                ELM.append(float(row[index]))
+
+    return X_POS, Y_POS, ELM
+
+
 def generate_spectra(foldername, x_pos, y_pos):
     """Reading the EDX data from .xml datafile exported by the BRUKER software. The function will iter through the file,
     fetching the needed attributs in the metadata and the actual data to create a Scatter Figure with the plotly module
@@ -147,7 +188,6 @@ def generate_spectra(foldername, x_pos, y_pos):
     return fig, meta
 
 
-# need to finish slicing this function
 def get_elements(foldername, with_plot=False):
     """Reading from the Global Spectrum Results.xlsx file, the function will return all the element that were used for the quantification
     but excluding the element that were deconvoluted
@@ -176,7 +216,7 @@ def get_elements(foldername, with_plot=False):
         return []
     ws = wb.active
 
-    # putting all the data inside lists to obtain a treatable format
+    # putting all the data inside lists to obtain a list of each line
     LIST_DATA = []
     for i, row in enumerate(ws.values):
         LIST_DATA.append(row)
@@ -218,30 +258,11 @@ def generate_heatmap(folderpath_edx, element_edx):
         return empty_fig
 
     # Get the data from the .xlsx file
-    elms, LIST_DATA = get_elements(folderpath_edx, with_plot=True)
+    elms, list_data = get_elements(folderpath_edx, with_plot=True)
     if element_edx not in elms:
         return empty_fig
 
-    step_x = 5
-    step_y = 5
-    start_x = -40
-    start_y = -40
-    X_POS = []
-    Y_POS = []
-    ELM = []
-
-    for row in LIST_DATA:
-        if row[0] == "Spectrum":
-            index = row.index(element_edx)
-        elif row[0].startswith("Spectrum_"):
-            x_index, y_index = row[0].split("(")[-1].split(")")[0].split(",")
-            x_pos, y_pos = (int(x_index) - 1) * step_x + start_x, (
-                int(y_index) - 1
-            ) * step_y + start_y
-            if np.abs(x_pos) + np.abs(y_pos) <= 60:
-                X_POS.append(x_pos)
-                Y_POS.append(y_pos)
-                ELM.append(float(row[index]))
+    X_POS, Y_POS, ELM = make_heatmap(list_data, element_edx)
 
     fig = go.Figure(data=go.Heatmap(x=X_POS, y=Y_POS, z=ELM, colorscale="Jet"))
     fig.update_layout(title=f"EDX Heatmap for element {element_edx}")
