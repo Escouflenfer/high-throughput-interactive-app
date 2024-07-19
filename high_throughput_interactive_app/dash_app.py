@@ -5,7 +5,6 @@ Internal use for Institut Néel and within the MaMMoS project, to read big datas
 @Author: William Rigaut - Institut Néel (william.rigaut@neel.cnrs.fr)
 """
 
-import os
 from dash import Dash, html, dcc, Input, Output, callback
 from interface.widgets_edx import WidgetsEDX
 from internal_functions import edx
@@ -13,20 +12,14 @@ from internal_functions import edx
 children_edx = WidgetsEDX()
 
 # EDX tab with all the components
-edx_tab = dcc.Tab(
-    id="tab-1",
-    label="EDX",
+edx_tab = children_edx.make_tab_from_widgets()
+moke_tab = dcc.Tab(
+    id="moke",
+    label="MOKE",
+    value="moke",
     children=[
         html.Div(
-            [
-                children_edx.folderpath,
-                children_edx.element,
-                children_edx.crange_slider,
-                children_edx.xrange_slider,
-                children_edx.yrange_slider,
-                children_edx.edx_heatmap,
-                children_edx.edx_spectra,
-            ],
+            [],
             className="grid_layout",
         )
     ],
@@ -40,8 +33,8 @@ app.layout = html.Div(
     [
         dcc.Tabs(
             id="tabs",
-            value="tab-1",
-            children=[edx_tab],
+            value="edx",
+            children=[edx_tab, moke_tab],
         )
     ],
     className="window_layout",

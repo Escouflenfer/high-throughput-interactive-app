@@ -1,3 +1,10 @@
+"""
+class file for edx widgets using dash module to detach it completely from Jupyter Notebooks.
+Internal use for Institut Néel and within the MaMMoS project, to read big datasets produced at Institut Néel.
+
+@Author: William Rigaut - Institut Néel (william.rigaut@neel.cnrs.fr)
+"""
+
 import os
 from dash import html, dcc
 
@@ -27,7 +34,7 @@ class WidgetsEDX:
     crange_slider_step = 0.1
     crange_slider_value = [0, 100]
     crange_slider_markStep = 5
-    crange_slider_className = "cell21"
+    crange_slider_className = "cell11"
 
     edx_spectra_className = "plot_cell_right"
 
@@ -122,7 +129,7 @@ class WidgetsEDX:
                     id="crange_slider",
                 ),
             ],
-            className="cell21",
+            className=self.crange_slider_className,
         )
 
         # EDX spectra graph that will be modified by user interaction
@@ -134,3 +141,32 @@ class WidgetsEDX:
         self.edx_heatmap = html.Div(
             [dcc.Graph(id="edx_heatmap")], className=self.edx_heatmap_className
         )
+
+    def make_tab_from_widgets(
+        self,
+        id_edx="edx",
+        label_edx="edx",
+        value_edx="edx",
+        className_edx="grid_layout_edx",
+    ):
+        edx_tab = dcc.Tab(
+            id=id_edx,
+            label=label_edx,
+            value=value_edx,
+            children=[
+                html.Div(
+                    [
+                        self.folderpath,
+                        self.element,
+                        self.crange_slider,
+                        self.xrange_slider,
+                        self.yrange_slider,
+                        self.edx_heatmap,
+                        self.edx_spectra,
+                    ],
+                    className=className_edx,
+                )
+            ],
+        )
+
+        return edx_tab
