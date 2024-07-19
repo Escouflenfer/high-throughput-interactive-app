@@ -6,24 +6,16 @@ Internal use for Institut Néel and within the MaMMoS project, to read big datas
 """
 
 from dash import Dash, html, dcc, Input, Output, callback
-from interface.widgets_edx import WidgetsEDX
+from interface import widgets_edx, widgets_moke
 from internal_functions import edx
 
-children_edx = WidgetsEDX()
-
 # EDX tab with all the components
+children_edx = widgets_edx.WidgetsEDX()
 edx_tab = children_edx.make_tab_from_widgets()
-moke_tab = dcc.Tab(
-    id="moke",
-    label="MOKE",
-    value="moke",
-    children=[
-        html.Div(
-            [],
-            className="grid_layout",
-        )
-    ],
-)
+
+# MOKE tab
+children_moke = widgets_moke.WidgetsMOKE()
+moke_tab = children_moke.make_tab_from_widgets()
 
 # App initialization
 app = Dash(__name__)
@@ -34,7 +26,7 @@ app.layout = html.Div(
         dcc.Tabs(
             id="tabs",
             value="edx",
-            children=[edx_tab, moke_tab],
+            children=[edx_tab],
         )
     ],
     className="window_layout",
