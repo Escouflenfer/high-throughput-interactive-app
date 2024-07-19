@@ -3,7 +3,7 @@
     border: solid 0px cyan;
 }
 
-.grid_layout{
+.grid_layout_edx{
     display: grid;
     grid-template-columns: repeat(3, 1fr);
     grid-template-columns: fit-content(750px) fit-content(1100px);
