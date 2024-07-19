@@ -6,8 +6,8 @@
 .grid_layout_edx{
     display: grid;
     grid-template-columns: repeat(3, 1fr);
-    grid-template-columns: fit-content(750px) fit-content(1100px);
-    grid-auto-rows: minmax(auto, auto);
+    /*grid-template-columns: fit-content(750px) fit-content(1100px);
+    grid-auto-rows: minmax(auto, auto);*/
     grid-gap: 0px 5px;
     justify-content: center;
     align-items: center;

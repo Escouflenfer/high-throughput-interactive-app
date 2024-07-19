@@ -26,7 +26,7 @@ app.layout = html.Div(
         dcc.Tabs(
             id="tabs",
             value="edx",
-            children=[edx_tab],
+            children=[edx_tab, moke_tab],
         )
     ],
     className="window_layout",

@@ -17,10 +17,10 @@ def frange(start, stop, step):
 class WidgetsMOKE:
     folderpath_id = "moke_folderpath"
     folderpath_dataPath = "./data/MOKE/"
-    folderpath_className = "cell12"
+    folderpath_className = "moke_cell12"
 
     subfolder_id = "moke_subfolder"
-    subfolderpath_className = "cell22"
+    subfolderpath_className = "moke_cell22"
 
     xrange_slider_id = "moke_xrange_slider"
     xrange_slider_min = 0
@@ -28,7 +28,7 @@ class WidgetsMOKE:
     xrange_slider_step = 1
     xrange_slider_value = [0, 100]
     xrange_slider_markStep = 10
-    xrange_slider_className = "cell13"
+    xrange_slider_className = "moke_cell13"
 
     yrange_slider_id = "moke_yrange_slider"
     yrange_slider_min = -1
@@ -36,7 +36,7 @@ class WidgetsMOKE:
     yrange_slider_step = 0.01
     yrange_slider_value = [-0.5, 0.5]
     yrange_slider_markStep = 0.5
-    yrange_slider_className = "cell23"
+    yrange_slider_className = "moke_cell23"
 
     crange_slider_id = "moke_crange_slider"
     crange_slider_min = 0
@@ -44,13 +44,13 @@ class WidgetsMOKE:
     crange_slider_step = 0.1
     crange_slider_value = [0, 3]
     crange_slider_markStep = 2
-    crange_slider_className = "cell11"
+    crange_slider_className = "moke_cell11"
 
     moke_loop_id = "moke_loop"
-    moke_loop_className = "plot_cell_right"
+    moke_loop_className = "moke_loop_plot_cell"
 
     moke_heatmap_id = "moke_heatmap"
-    moke_heatmap_className = "plot_cell_left"
+    moke_heatmap_className = "moke_heatmap_plot_cell"
 
     def __init__(self):
         # Folderpath for the MOKE loop
@@ -78,7 +78,7 @@ class WidgetsMOKE:
         # Slider Xrange component
         self.xrange_slider = html.Div(
             children=[
-                html.Label("Energy Range"),
+                html.Label("Time"),
                 dcc.RangeSlider(
                     min=self.xrange_slider_min,
                     max=self.xrange_slider_max,
@@ -101,7 +101,7 @@ class WidgetsMOKE:
         # Slider Yrange component
         self.yrange_slider = html.Div(
             children=[
-                html.Label("Counts"),
+                html.Label("Kerr Rotation"),
                 dcc.RangeSlider(
                     min=self.yrange_slider_min,
                     max=self.yrange_slider_max,
