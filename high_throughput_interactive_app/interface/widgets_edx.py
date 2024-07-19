@@ -145,7 +145,7 @@ class WidgetsEDX:
     def make_tab_from_widgets(
         self,
         id_edx="edx",
-        label_edx="edx",
+        label_edx="EDX",
         value_edx="edx",
         className_edx="grid_layout_edx",
     ):
