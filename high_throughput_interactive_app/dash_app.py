@@ -7,7 +7,7 @@ Internal use for Institut Néel and within the MaMMoS project, to read big datas
 
 from dash import Dash, html, dcc, Input, Output, callback
 from interface import widgets_edx, widgets_moke
-from internal_functions import edx
+from internal_functions import edx, moke
 
 # EDX tab with all the components
 children_edx = widgets_edx.WidgetsEDX()
@@ -33,7 +33,8 @@ app.layout = html.Div(
 )
 
 
-# Update element_edx widget when olderpath is changed by the user
+# Component updates
+# EDX components
 @callback(Output("element_edx", "options"), Input("folderpath", "value"))
 def update_element_edx(folderpath):
     element_edx_opt = []
@@ -42,7 +43,6 @@ def update_element_edx(folderpath):
     return element_edx_opt
 
 
-# Update crange_slider widget when olderpath or element_edx is changed by the user
 @callback(
     Output("edx_heatmap", "figure", allow_duplicate=True),
     Input("folderpath", "value"),
@@ -59,14 +59,31 @@ def update_crange_slider(folderpath, element_edx, fig, crange):
     return fig
 
 
+# MOKE components
+@callback(
+    Output(children_moke.subfolder_id, "options"),
+    Input(children_moke.folderpath_id, "value"),
+)
+def update_subfolder_moke(folderpath):
+    subfolder_options = []
+    if folderpath is not None:
+        subfolder_options = moke.get_subfolders(
+            folderpath, moke_path=children_moke.folderpath_dataPath
+        )
+
+    return subfolder_options
+
+
+# Heatmap updates
+# EDX
 @callback(
     Output("edx_heatmap", "figure"),
     Output("crange_slider", "value"),
     Input("folderpath", "value"),
     Input("element_edx", "value"),
 )
-def update_heatmap(folderpath, element_edx):
-    fig = edx.generate_heatmap(folderpath, element_edx)
+def update_heatmap_edx(foldername, element_edx):
+    fig = edx.generate_heatmap(foldername, element_edx)
 
     # Update the dimensions of the heatmap and the X-Y title axes
     fig.update_layout(height=750, width=750, clickmode="event+select")
@@ -78,13 +95,34 @@ def update_heatmap(folderpath, element_edx):
 
     # Update the colorbar range
     crange = [0, 100]
-    if folderpath is not None and element_edx is not None:
+    if foldername is not None and element_edx is not None:
         z_values = fig.data[0].z
         crange = [min(z_values), max(z_values)]
 
     return fig, crange
 
 
+@callback(
+    Output(children_moke.moke_heatmap_id, "figure"),
+    Input(children_moke.folderpath_id, "value"),
+    Input(children_moke.subfolder_id, "value"),
+)
+def update_heatmap_moke(foldername, subfolder):
+    fig = moke.plot_moke_reflectivity_heatmap(foldername, subfolder)
+
+    # Update the dimensions of the heatmap and the X-Y title axes
+    fig.update_layout(height=750, width=750, clickmode="event+select")
+    fig.update_xaxes(title="X Position")
+    fig.update_yaxes(title="Y Position")
+
+    # Update the colorbar title
+    fig.data[0].colorbar = dict(title="Coercivity (T)")
+
+    return fig
+
+
+# Single graph updates
+# EDX spectra
 @callback(
     Output("edx_spectra", "figure"),
     Input("folderpath", "value"),
@@ -111,5 +149,34 @@ def update_spectra(foldername, clickData, xrange, yrange):
     return fig
 
 
+# MOKE data
+@callback(
+    Output(children_moke.moke_loop_id, "figure"),
+    Input(children_moke.folderpath_id, "value"),
+    Input(children_moke.subfolder_id, "value"),
+    Input(children_moke.moke_heatmap_id, "clickData"),
+    Input(children_moke.xrange_slider_id, "value"),
+    Input(children_moke.yrange_slider_id, "value"),
+)
+def update_moke_data(foldername, subfolder, clickData, xrange, yrange):
+    if clickData is None:
+        x_pos, y_pos = 0, 0
+    else:
+        x_pos = int(clickData["points"][0]["x"])
+        y_pos = int(clickData["points"][0]["y"])
+
+    fig = moke.plot_moke_data(foldername, subfolder, x_pos, y_pos)
+    fig.update_layout(
+        height=750,
+        width=1100,
+        title=f"MOKE Signal for {subfolder} at position ({x_pos}, {y_pos})",
+    )
+    fig.update_xaxes(title="Time (μs)", range=xrange)
+    fig.update_yaxes(title="Kerr Rotation (V)", range=yrange)
+
+    return fig
+
+
+# Run app
 if __name__ == "__main__":
     app.run(debug=True)
