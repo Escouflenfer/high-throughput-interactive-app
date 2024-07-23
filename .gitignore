@@ -15,4 +15,5 @@ dist/
 *.egg-info/
 _autosummary/
 .vscode
-data/MOKE
+data/
+results/
