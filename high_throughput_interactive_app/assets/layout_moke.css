@@ -3,22 +3,22 @@
 .grid_layout_moke{
     display: grid;
     grid-template-columns: repeat(3, 1fr);
-    /*grid-template-columns: fit-content(750px) fit-content(1100px);
-    grid-auto-rows: minmax(auto, auto);*/
+    /*grid-template-columns: fit-content(750px) fit-content(1100px);*/
+    grid-auto-rows: minmax(auto, auto);
     grid-gap: 0px 5px;
     justify-content: center;
     align-items: center;
 }
 
 .moke_heatmap_plot_cell{
-    border: solid 1px red;
+    border: solid 0px red;
     max-width: 100%;
     display: block;
     grid-column: 0/2;
     grid-row: 3;
 }
 .moke_loop_plot_cell{
-    border: solid 1px red;
+    border: solid 0px red;
     max-width: 100%;
     display: block;
     grid-column: 2/4;
@@ -26,7 +26,7 @@
 }
 
 .moke_cell11{
-    border: solid 1px red;
+    border: solid 0px red;
     max-width: 100%;
     height: auto;
     display: block;
@@ -35,7 +35,7 @@
 }
 
 .moke_cell12{
-    border: solid 1px red;
+    border: solid 0px red;
     max-width: 100%;
     height: auto;
     display: block;
@@ -45,7 +45,7 @@
 }
 
 .moke_cell13{
-    border: solid 1px red;
+    border: solid 0px red;
     max-width: 100%;
     height: auto;
     display: block;
@@ -54,7 +54,7 @@
 }
 
 .moke_cell21{
-    border: solid 1px red;
+    border: solid 0px red;
     max-width: 100%;
     height: auto;
     display: block;
@@ -63,7 +63,7 @@
 }
 
 .moke_cell22{
-    border: solid 1px red;
+    border: solid 0px red;
     max-width: 100%;
     height: auto;
     display: block;
@@ -72,7 +72,7 @@
 }
 
 .moke_cell23{
-    border: solid 1px red;
+    border: solid 0px red;
     max-width: 100%;
     height: auto;
     display: block;
