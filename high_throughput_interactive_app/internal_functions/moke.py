@@ -11,6 +11,19 @@ import plotly.graph_objects as go
 
 
 def read_info(fullpath):
+    """Reads the info.txt file created when a MOKE scan is done. The function will return the applied voltage
+    in the coil and the number of aquisitions per point
+
+    Parameters
+    ----------
+    fullpath : STR
+        Path containing the datafiles and the info.txt file
+
+    Returns
+    -------
+    info_list : LIST
+        List containing the applied voltage in int type and a list containing indexes from 0 to the (number of aquisition - 1)
+    """
     if fullpath is None:
         return []
 
@@ -26,6 +39,18 @@ def read_info(fullpath):
 
 
 def heatmap_exists(subfolder, suffix="_MOKE.dat", result_moke_path="./results/MOKE/"):
+    """Check if the heatmap was already created in the result_moke_path folder
+
+    Parameters
+    ----------
+    subfolder : STR
+        Path containing the datafiles and the info.txt file
+
+    Returns
+    -------
+    info_list : LIST
+        List containing the applied voltage in int type and a list containing indexes from 0 to the (number of aquisition - 1)
+    """
     filepath = f"{subfolder}{suffix}"
 
     return filepath in os.listdir(result_moke_path)

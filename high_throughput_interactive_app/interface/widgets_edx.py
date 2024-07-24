@@ -10,7 +10,7 @@ from dash import html, dcc
 
 
 class WidgetsEDX:
-    folderpath_dataPath = "./data/EDX/"
+    folderpath_dataPath = "../data/EDX/"
     folderpath_className = "cell12"
 
     element_className = "cell22"
