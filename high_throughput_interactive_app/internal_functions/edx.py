@@ -44,6 +44,17 @@ def make_path_name(
     return path_name
 
 
+def create_result_list(element_list, results_ext):
+    result_list = []
+
+    for i, elm in enumerate(results_ext):
+        if int(elm[0][1]) in [nb[0] for nb in element_list]:
+            element_name = element_list[i][1]
+        for attrb in elm[1:]:
+            result_list.append([element_name, round(float(attrb[1]) * 100, 2)])
+    return result_list
+
+
 def get_spectra_spx(spx_file):
     """Reading spx datafile exported by the BRUKER software. The function will iter through the file,
     fetching the needed attributs in the metadata and the actual data to create a Scatter Figure with the plotly module
@@ -61,6 +72,8 @@ def get_spectra_spx(spx_file):
     # Metadata to keep for displaying quantification results
     energy_step = 0.0
     zero_energy = 0.0
+    results_ext = []
+    element_list = []
 
     # Iteration through the XML datafile, searching for important metadata and EDX spectra
     tree = ET.parse(spx_file)
@@ -81,8 +94,30 @@ def get_spectra_spx(spx_file):
                     for i, counts in enumerate(elm.text.split(","))
                 ]
             )
+        # Getting element quantification results
+        elif elm.tag == "ClassInstance" and elm.get("Name") == "Results":
+            for child in elm.iter():
+                if child.tag == "Result":
+                    results_ext.append([])
+                elif child.tag in ["Atom", "AtomPercent"]:
+                    if child.tag == "Atom" and int(child.text) < 10:
+                        results_ext[-1].append((child.tag, f"0{child.text}"))
+                    else:
+                        results_ext[-1].append((child.tag, child.text))
+                elif child.tag == "ExtResults":
+                    break
+        elif elm.tag == "ClassInstance" and elm.get("Name") == "Elements":
+            for child in elm.iter():
+                if child.get("Type") == "TRTPSEElement":
+                    name_elm = child.get("Name")
+                    for nb in child.iter():
+                        if nb.tag == "Element":
+                            nb_elm = nb.text
+                    element_list.append([int(nb_elm), name_elm])
 
-    metadata_lst = [voltage, working_distance, energy_step, zero_energy]
+    result_list = create_result_list(element_list, results_ext)
+
+    metadata_lst = [voltage, working_distance, energy_step, zero_energy, result_list]
 
     return edx_spectra, metadata_lst
 
@@ -171,10 +206,15 @@ def generate_spectra(foldername, x_pos, y_pos):
     )
 
     # Creating the metadata annotation within the plot
+    results_str = "".join(
+        [str(elm[0]) + ": " + str(elm[1]) + " at.%<br>" for elm in metadata[4]]
+    )
+    annoted = "Voltage: {:} keV<br>Working Dist.: {:.5f} mm<br>Zero Energy: {:.3f} keV<br>{:}".format(
+        metadata[0], metadata[1], metadata[3], results_str
+    )
+
     meta = go.layout.Annotation(
-        text="Voltage: {:} keV<br>Working Distance: {:.5f} mm<br>Zero Energy: {:.5f} keV".format(
-            metadata[0], metadata[1], metadata[3]
-        ),
+        text=annoted,
         align="left",
         showarrow=False,
         xref="paper",

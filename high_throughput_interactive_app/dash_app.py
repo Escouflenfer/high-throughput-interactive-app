@@ -74,8 +74,35 @@ def update_subfolder_moke(folderpath):
     return subfolder_options
 
 
+@callback(
+    Output("moke", "children"),
+    Input(children_moke.data_type_id, "value"),
+    Input(children_moke.folderpath_id, "value"),
+    Input(children_moke.subfolder_id, "value"),
+)
+def update_sliders_moke(data_type, folderpath, subfolder):
+    print(data_type, children_moke.data_type_value)
+    if children_moke.data_type_value == data_type:
+        return children_moke
+    else:
+        children_moke.data_type_value = data_type
+
+    new_children_moke = widgets_moke.WidgetsMOKE()
+    new_children_moke.folderpath_value = folderpath
+    new_children_moke.subfolder_options = update_subfolder_moke(folderpath)
+    new_children_moke.subfolder_value = subfolder
+
+    if data_type == "Magnetic properties":
+        new_children_moke.set_properties_to_magnetic()
+
+    elif data_type == "Raw MOKE data":
+        new_children_moke.set_properties_to_raw()
+
+    return new_children_moke.get_children()
+
+
 # Heatmap updates
-# EDX
+#   EDX
 @callback(
     Output("edx_heatmap", "figure"),
     Output("crange_slider", "value"),
@@ -102,27 +129,27 @@ def update_heatmap_edx(foldername, element_edx):
     return fig, crange
 
 
+#   MOKE
 @callback(
     Output(children_moke.moke_heatmap_id, "figure"),
     Input(children_moke.folderpath_id, "value"),
     Input(children_moke.subfolder_id, "value"),
+    Input(children_moke.data_type_id, "value"),
 )
-def update_heatmap_moke(foldername, subfolder):
-    fig = moke.plot_moke_reflectivity_heatmap(foldername, subfolder)
-
+def update_heatmap_moke(foldername, subfolder, datatype):
+    fig, header_data = moke.plot_moke_heatmap(foldername, subfolder, datatype)
     # Update the dimensions of the heatmap and the X-Y title axes
     fig.update_layout(height=750, width=750, clickmode="event+select")
     fig.update_xaxes(title="X Position")
     fig.update_yaxes(title="Y Position")
 
-    # Update the colorbar title
-    fig.data[0].colorbar = dict(title="Coercivity (T)")
+    fig.data[0].colorbar = dict(title=header_data)
 
     return fig
 
 
 # Single graph updates
-# EDX spectra
+#   EDX spectra
 @callback(
     Output("edx_spectra", "figure"),
     Input("folderpath", "value"),
@@ -149,7 +176,7 @@ def update_spectra(foldername, clickData, xrange, yrange):
     return fig
 
 
-# MOKE data
+#   MOKE data
 @callback(
     Output(children_moke.moke_loop_id, "figure"),
     Input(children_moke.folderpath_id, "value"),
@@ -157,15 +184,17 @@ def update_spectra(foldername, clickData, xrange, yrange):
     Input(children_moke.moke_heatmap_id, "clickData"),
     Input(children_moke.xrange_slider_id, "value"),
     Input(children_moke.yrange_slider_id, "value"),
+    Input(children_moke.data_type_id, "value"),
 )
-def update_moke_data(foldername, subfolder, clickData, xrange, yrange):
+def update_moke_data(foldername, subfolder, clickData, xrange, yrange, data_type):
     if clickData is None:
         x_pos, y_pos = 0, 0
     else:
         x_pos = int(clickData["points"][0]["x"])
         y_pos = int(clickData["points"][0]["y"])
 
-    fig = moke.plot_moke_data(foldername, subfolder, x_pos, y_pos)
+    fig = moke.plot_1D_with_datatype(foldername, subfolder, x_pos, y_pos, data_type)
+
     fig.update_layout(
         height=750,
         width=1100,

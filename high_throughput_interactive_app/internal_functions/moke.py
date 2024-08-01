@@ -76,7 +76,7 @@ def get_subfolders(foldername, moke_path="./data/MOKE/"):
     return [folder for folder in os.listdir(folderpath) if not folder.startswith(".")]
 
 
-def make_path_name(fullpath, x_pos, y_pos, moke_path="./data/MOKE/"):
+def make_path_name(fullpath, x_pos, y_pos):
     """Fetching correct datafiles at given (X, Y) position and a given dataset
 
     Parameters
@@ -280,6 +280,61 @@ def get_coordinates_from_name(filename):
     ]
 
 
+def plot_moke_coercivity(foldername, subfolder, x_pos, y_pos, moke_path="./data/MOKE/"):
+    fullpath = f"{moke_path}{foldername}/{subfolder}/"
+    empty_fig = go.Figure(data=go.Scatter())
+
+    if foldername is None or subfolder is None:
+        return empty_fig
+
+    pulse_voltage, data_range = read_info(fullpath)
+    files = make_path_name(fullpath, x_pos, y_pos)
+    moke_data = read_moke_data(*files, data_range)
+    field_values, corr_mag_values = calculate_field_values(
+        *moke_data[1:], pulse_voltage
+    )
+
+    coercivity = extract_coercivity(field_values, corr_mag_values)
+    reflectivity = np.mean(moke_data[3])
+
+    fig = go.Figure()
+    fig.add_trace(
+        go.Scatter(
+            x=[*field_values[356:654], *field_values[1356:1664]],
+            y=[*corr_mag_values[356:654], *corr_mag_values[1356:1664]],
+            mode="markers",
+            marker=dict(color="white", size=9, line=dict(color="blue", width=2)),
+        )
+    )
+
+    meta = go.layout.Annotation(
+        text="Coercivity {:.2f} T<br>Reflectivity {:.2f} V".format(
+            coercivity, reflectivity
+        ),
+        align="left",
+        showarrow=False,
+        xref="paper",
+        yref="paper",
+        x=0.95,
+        y=0.95,
+        bordercolor="black",
+        borderwidth=1,
+    )
+    fig.update_layout(annotations=[meta])
+
+    return fig
+
+
+def plot_1D_with_datatype(foldername, subfolder, x_pos, y_pos, data_type):
+    fig = go.Figure(data=go.Scatter())
+
+    if data_type == "Magnetic properties":
+        fig = plot_moke_coercivity(foldername, subfolder, x_pos, y_pos)
+    elif data_type == "Raw MOKE data":
+        fig = plot_moke_data(foldername, subfolder, x_pos, y_pos)
+    return fig
+
+
 def generate_moke_heatmap(fullpath):
     pulse_voltage, data_range = read_info(fullpath)
     data_list = []
@@ -332,14 +387,18 @@ def read_heatmap(datapath, suffix="_MOKE.dat"):
     return header, data
 
 
-def plot_moke_reflectivity_heatmap(
-    foldername, subfolder, moke_path="./data/MOKE/", result_moke_path="./results/MOKE/"
+def plot_moke_heatmap(
+    foldername,
+    subfolder,
+    datatype,
+    moke_path="./data/MOKE/",
+    result_moke_path="./results/MOKE/",
 ):
     fullpath = f"{moke_path}{foldername}/{subfolder}/"
     datapath = f"{result_moke_path}{subfolder}"
     empty_fig = go.Figure(data=go.Heatmap())
     empty_fig.update_layout(height=800, width=800)
-    if foldername is None or subfolder is None:
+    if foldername is None or subfolder is None or datatype is None:
         return empty_fig
 
     if not heatmap_exists(subfolder):
@@ -356,8 +415,17 @@ def plot_moke_reflectivity_heatmap(
         coercivity.append(line[2])
         reflectivity.append(line[3])
 
-    fig = go.Figure(data=go.Heatmap(x=x_pos, y=y_pos, z=coercivity, colorscale="Jet"))
-    fig.update_layout(title=f"MOKE coercivity map for {subfolder}")
-    fig.data[0].update(zmin=min(coercivity), zmax=max(coercivity))
+    z_values = []
+    header_data = None
+    if datatype == "Magnetic properties":
+        z_values = coercivity
+        header_data = header[2]
+    elif datatype == "Raw MOKE data":
+        z_values = reflectivity
+        header_data = header[3]
 
-    return fig
+    fig = go.Figure(data=go.Heatmap(x=x_pos, y=y_pos, z=z_values, colorscale="Jet"))
+    fig.update_layout(title=f"MOKE {header_data.split()[0]} map for {subfolder}")
+    fig.data[0].update(zmin=min(z_values), zmax=max(z_values))
+
+    return fig, header_data
