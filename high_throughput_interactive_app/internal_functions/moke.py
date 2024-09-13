@@ -8,6 +8,7 @@ Internal use for Institut Néel and within the MaMMoS project, to export and rea
 import os
 import numpy as np
 import plotly.graph_objects as go
+from scipy import signal
 
 
 def read_info(fullpath):
@@ -73,7 +74,13 @@ def get_subfolders(foldername, moke_path="./data/MOKE/"):
 
     folderpath = f"{moke_path}{foldername}/"
 
-    return [folder for folder in os.listdir(folderpath) if not folder.startswith(".")]
+    return sorted(
+        [
+            folder
+            for folder in os.listdir(folderpath)
+            if not folder.startswith(".") and not folder.endswith(".jpg")
+        ]
+    )
 
 
 def make_path_name(fullpath, x_pos, y_pos):
@@ -99,9 +106,14 @@ def make_path_name(fullpath, x_pos, y_pos):
     # Folder pointing to the MOKE scans
     fullpath = f"{fullpath}"
 
-    mag = f"x{float(x_pos):.1f}_y{float(y_pos):.1f}_magnetization.txt"
-    pul = f"x{float(x_pos):.1f}_y{float(y_pos):.1f}_pulse.txt"
-    sum = f"x{float(x_pos):.1f}_y{float(y_pos):.1f}_sum.txt"
+    if isinstance(x_pos, int):
+        x_pos = float("{:.1f}".format(x_pos))
+    if isinstance(y_pos, int):
+        y_pos = float("{:.1f}".format(y_pos))
+
+    mag = f"x{x_pos}_y{y_pos}_magnetization.txt"
+    pul = f"x{x_pos}_y{y_pos}_pulse.txt"
+    sum = f"x{x_pos}_y{y_pos}_sum.txt"
     data_mag = f"{fullpath}/{mag}"
     data_pul = f"{fullpath}/{pul}"
     data_sum = f"{fullpath}/{sum}"
@@ -176,6 +188,20 @@ def read_moke_data(data_mag, data_pul, data_sum, data_range=range(1), time_step=
 
 
 def calculate_field_adjusted(pulse_data, adjust_to_max, max_field):
+    """Calculate field as a function of applied voltage
+
+    Parameters
+    ----------
+    pulse_data : INT
+        Main folder containing all the different scans for MOKE, where each scan is
+        also a folder containing all the datafile
+    adjust_to_max : BOOL
+
+    Returns
+    -------
+    path_name : LIST
+        List containing all the folders inside main MOKE 'foldername'
+    """
     field = np.cumsum(pulse_data)
 
     # Calculate the scale factor differently
@@ -280,6 +306,13 @@ def get_coordinates_from_name(filename):
     ]
 
 
+def smoothData(field_values, corr_mag_values, polyorder=3):
+    field_values = signal.savgol_filter(field_values, 12, 10 - polyorder)
+    corr_mag_values = signal.savgol_filter(corr_mag_values, 12, 10 - polyorder)
+
+    return field_values, corr_mag_values
+
+
 def plot_moke_coercivity(foldername, subfolder, x_pos, y_pos, moke_path="./data/MOKE/"):
     fullpath = f"{moke_path}{foldername}/{subfolder}/"
     empty_fig = go.Figure(data=go.Scatter())
@@ -293,6 +326,8 @@ def plot_moke_coercivity(foldername, subfolder, x_pos, y_pos, moke_path="./data/
     field_values, corr_mag_values = calculate_field_values(
         *moke_data[1:], pulse_voltage
     )
+
+    field_values, corr_mag_values = smoothData(field_values, corr_mag_values)
 
     coercivity = extract_coercivity(field_values, corr_mag_values)
     reflectivity = np.mean(moke_data[3])
@@ -315,7 +350,7 @@ def plot_moke_coercivity(foldername, subfolder, x_pos, y_pos, moke_path="./data/
         showarrow=False,
         xref="paper",
         yref="paper",
-        x=0.95,
+        x=0.10,
         y=0.95,
         bordercolor="black",
         borderwidth=1,
@@ -347,6 +382,8 @@ def generate_moke_heatmap(fullpath):
             *moke_data[1:], pulse_voltage
         )
 
+        field_values, corr_mag_values = smoothData(field_values, corr_mag_values)
+
         file_list.append(extract_coercivity(field_values, corr_mag_values))
         file_list.append(np.mean(moke_data[-1]))
         data_list.append(file_list)
@@ -356,7 +393,6 @@ def generate_moke_heatmap(fullpath):
 
 def save_moke_heatmap(fullpath, data_list, suffix="_MOKE.dat"):
     filepath = f"{fullpath}{suffix}"
-    print(filepath)
     header = f"x_pos\ty_pos\tCoercivity (T)\tReflectivity (V)\n"
 
     try:
@@ -398,8 +434,10 @@ def plot_moke_heatmap(
     datapath = f"{result_moke_path}{subfolder}"
     empty_fig = go.Figure(data=go.Heatmap())
     empty_fig.update_layout(height=800, width=800)
+    header_data = None
+
     if foldername is None or subfolder is None or datatype is None:
-        return empty_fig
+        return empty_fig, header_data
 
     if not heatmap_exists(subfolder):
         data_list = generate_moke_heatmap(fullpath)
@@ -416,7 +454,6 @@ def plot_moke_heatmap(
         reflectivity.append(line[3])
 
     z_values = []
-    header_data = None
     if datatype == "Magnetic properties":
         z_values = coercivity
         header_data = header[2]

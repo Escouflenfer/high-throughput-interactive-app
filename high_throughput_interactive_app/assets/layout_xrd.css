@@ -1,0 +1,81 @@
+/* CSS file for app layout*/
+
+.grid_layout_xrd{
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    /*grid-template-columns: fit-content(750px) fit-content(1100px);*/
+    grid-auto-rows: minmax(auto, auto);
+    grid-gap: 0px 5px;
+    justify-content: center;
+    align-items: center;
+}
+
+.xrd_heatmap_plot_cell{
+    border: solid 0px red;
+    max-width: 100%;
+    display: block;
+    grid-column: 0/2;
+    grid-row: 3;
+}
+.xrd_pattern_plot_cell{
+    border: solid 0px red;
+    max-width: 100%;
+    display: block;
+    grid-column: 2/4;
+    grid-row: 3;
+}
+
+.xrd_cell11{
+    border: solid 0px red;
+    max-width: 100%;
+    height: auto;
+    display: block;
+    grid-column: 1;
+    grid-row: 1;
+}
+
+.xrd_cell12{
+    border: solid 0px red;
+    max-width: 100%;
+    height: auto;
+    display: block;
+    grid-column: 2;
+    grid-row: 1;
+
+}
+
+.xrd_cell13{
+    border: solid 0px red;
+    max-width: 100%;
+    height: auto;
+    display: block;
+    grid-column: 3;
+    grid-row: 1;
+}
+
+.xrd_cell21{
+    border: solid 0px red;
+    max-width: 100%;
+    height: auto;
+    display: block;
+    grid-column: 1;
+    grid-row: 2;
+}
+
+.xrd_cell22{
+    border: solid 0px red;
+    max-width: 100%;
+    height: auto;
+    display: block;
+    grid-column: 2;
+    grid-row: 2;
+}
+
+.xrd_cell23{
+    border: solid 0px red;
+    max-width: 100%;
+    height: auto;
+    display: block;
+    grid-column: 3;
+    grid-row: 2;
+}

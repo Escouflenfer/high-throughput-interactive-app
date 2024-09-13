@@ -6,8 +6,8 @@ Internal use for Institut Néel and within the MaMMoS project, to read big datas
 """
 
 from dash import Dash, html, dcc, Input, Output, callback
-from interface import widgets_edx, widgets_moke
-from internal_functions import edx, moke
+from interface import widgets_edx, widgets_moke, widgets_xrd
+from internal_functions import edx, moke, xrd
 
 # EDX tab with all the components
 children_edx = widgets_edx.WidgetsEDX()
@@ -16,6 +16,10 @@ edx_tab = children_edx.make_tab_from_widgets()
 # MOKE tab
 children_moke = widgets_moke.WidgetsMOKE()
 moke_tab = children_moke.make_tab_from_widgets()
+
+# XRD tab
+children_xrd = widgets_xrd.WidgetsXRD()
+xrd_tab = children_xrd.make_tab_from_widgets()
 
 # App initialization
 app = Dash(__name__)
@@ -26,7 +30,7 @@ app.layout = html.Div(
         dcc.Tabs(
             id="tabs",
             value="edx",
-            children=[edx_tab, moke_tab],
+            children=[edx_tab, moke_tab, xrd_tab],
         )
     ],
     className="window_layout",
@@ -75,13 +79,28 @@ def update_subfolder_moke(folderpath):
 
 
 @callback(
+    Output(children_moke.moke_heatmap_id, "figure", allow_duplicate=True),
+    Input(children_moke.folderpath_id, "value"),
+    Input(children_moke.subfolder_id, "value"),
+    Input(children_moke.moke_heatmap_id, "figure"),
+    Input(children_moke.crange_slider_id, "value"),
+    prevent_initial_call=True,
+)
+def update_crange_moke(folderpath, subfolder, fig, crange):
+    if folderpath is not None and subfolder is not None:
+        fig["data"][0]["zmin"] = min(crange)
+        fig["data"][0]["zmax"] = max(crange)
+
+    return fig
+
+
+@callback(
     Output("moke", "children"),
     Input(children_moke.data_type_id, "value"),
     Input(children_moke.folderpath_id, "value"),
     Input(children_moke.subfolder_id, "value"),
 )
 def update_sliders_moke(data_type, folderpath, subfolder):
-    print(data_type, children_moke.data_type_value)
     if children_moke.data_type_value == data_type:
         return children_moke
     else:
@@ -113,7 +132,7 @@ def update_heatmap_edx(foldername, element_edx):
     fig = edx.generate_heatmap(foldername, element_edx)
 
     # Update the dimensions of the heatmap and the X-Y title axes
-    fig.update_layout(height=750, width=750, clickmode="event+select")
+    fig.update_layout(height=600, width=600, clickmode="event+select")
     fig.update_xaxes(title="X Position")
     fig.update_yaxes(title="Y Position")
 
@@ -132,6 +151,7 @@ def update_heatmap_edx(foldername, element_edx):
 #   MOKE
 @callback(
     Output(children_moke.moke_heatmap_id, "figure"),
+    Output(children_moke.crange_slider_id, "value"),
     Input(children_moke.folderpath_id, "value"),
     Input(children_moke.subfolder_id, "value"),
     Input(children_moke.data_type_id, "value"),
@@ -139,13 +159,21 @@ def update_heatmap_edx(foldername, element_edx):
 def update_heatmap_moke(foldername, subfolder, datatype):
     fig, header_data = moke.plot_moke_heatmap(foldername, subfolder, datatype)
     # Update the dimensions of the heatmap and the X-Y title axes
-    fig.update_layout(height=750, width=750, clickmode="event+select")
+    fig.update_layout(height=600, width=600, clickmode="event+select")
     fig.update_xaxes(title="X Position")
     fig.update_yaxes(title="Y Position")
 
     fig.data[0].colorbar = dict(title=header_data)
 
-    return fig
+    crange = [0, 4]
+    if foldername is not None and subfolder is not None:
+        z_values = fig.data[0].z
+        crange = [min(z_values), max(z_values)]
+
+    return fig, crange
+
+
+#   XRD
 
 
 # Single graph updates
@@ -167,8 +195,8 @@ def update_spectra(foldername, clickData, xrange, yrange):
     fig, meta = edx.generate_spectra(foldername, x_pos, y_pos)
     fig.update_layout(
         title=f"EDX Spectrum for {foldername} at position ({x_pos}, {y_pos})",
-        height=750,
-        width=1100,
+        height=650,
+        width=1000,
         annotations=[meta],
     )
     fig.update_xaxes(title="Energy (keV)", range=xrange)
@@ -176,7 +204,7 @@ def update_spectra(foldername, clickData, xrange, yrange):
     return fig
 
 
-#   MOKE data
+#   MOKE loop
 @callback(
     Output(children_moke.moke_loop_id, "figure"),
     Input(children_moke.folderpath_id, "value"),
@@ -190,20 +218,31 @@ def update_moke_data(foldername, subfolder, clickData, xrange, yrange, data_type
     if clickData is None:
         x_pos, y_pos = 0, 0
     else:
-        x_pos = int(clickData["points"][0]["x"])
-        y_pos = int(clickData["points"][0]["y"])
+        x_pos = float(clickData["points"][0]["x"])
+        y_pos = float(clickData["points"][0]["y"])
 
     fig = moke.plot_1D_with_datatype(foldername, subfolder, x_pos, y_pos, data_type)
 
     fig.update_layout(
-        height=750,
-        width=1100,
+        height=650,
+        width=1000,
         title=f"MOKE Signal for {subfolder} at position ({x_pos}, {y_pos})",
     )
     fig.update_xaxes(title="Time (μs)", range=xrange)
     fig.update_yaxes(title="Kerr Rotation (V)", range=yrange)
 
     return fig
+
+
+@callback(
+    Output(children_xrd.xrd_pattern_id, "figure"),
+    Input(children_xrd.folderpath_id, "value"),
+    Input(children_xrd.xrd_heatmap_id, "clickData"),
+)
+def update_xrd_pattern(foldername, clickData):
+    xrd.read_xrd_pattern(foldername)
+
+    return None
 
 
 # Run app
