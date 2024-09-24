@@ -1,5 +1,6 @@
-# Dependencies for interactive_plot_edx
+# high_throughput_interactive_app requirements file
 
-dash
-openpyxl
-numpy
+dash==2.17.1
+numpy==2.0.0
+openpyxl==3.1.5
+scipy==1.14.1

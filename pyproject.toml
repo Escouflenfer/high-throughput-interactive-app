@@ -37,7 +37,8 @@ dependencies = [
 
 [project.optional-dependencies]
 dev = [
-    "pytest"
+    "pytest",
+    "flake8"
 ]
 
 [project.urls]
