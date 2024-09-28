@@ -90,7 +90,6 @@ def update_crange_moke(folderpath, subfolder, fig, crange):
     if folderpath is not None and subfolder is not None:
         fig["data"][0]["zmin"] = min(crange)
         fig["data"][0]["zmax"] = max(crange)
-
     return fig
 
 
@@ -118,6 +117,21 @@ def update_sliders_moke(data_type, folderpath, subfolder):
         new_children_moke.set_properties_to_raw()
 
     return new_children_moke.get_children()
+
+
+# XRD components
+@callback(
+    Output(children_xrd.data_type_id, "options"),
+    Output(children_xrd.data_type_id, "value"),
+    Input(children_xrd.folderpath_id, "value"),
+)
+def update_data_type_options(foldername):
+    refinement_options = xrd.check_xrd_refinement(foldername, xrd_path="./data/XRD/")
+
+    if refinement_options is not False:
+        return (["Raw XRD data"] + refinement_options), "Raw XRD data"
+    else:
+        return ["Raw XRD data"], "Raw XRD data"
 
 
 # Heatmap updates
@@ -238,13 +252,24 @@ def update_moke_data(foldername, subfolder, clickData, xrange, yrange, data_type
 
     fig = moke.plot_1D_with_datatype(foldername, subfolder, x_pos, y_pos, data_type)
 
-    fig.update_layout(
-        height=650,
-        width=1000,
-        title=f"MOKE Signal for {subfolder} at position ({x_pos}, {y_pos})",
-    )
-    fig.update_xaxes(title="Time (μs)", range=xrange)
-    fig.update_yaxes(title="Kerr Rotation (V)", range=yrange)
+    if data_type == "Raw MOKE data":
+        moke_title = f"Raw MOKE data for {subfolder} at position ({x_pos}, {y_pos})"
+        x_axis_label = "Time (s)"
+        y_axis_label = "Kerr Rotation (V)"
+
+    elif data_type == "Magnetic properties":
+        moke_title = f"Magnetic loop for {subfolder} at position ({x_pos}, {y_pos})"
+        x_axis_label = "Applied Field (T)"
+        y_axis_label = "Kerr Rotation (V)"
+    else:
+        moke_title = f"Select data type first"
+        x_axis_label = ""
+        y_axis_label = ""
+
+    fig.update_layout(height=650, width=1000, title=moke_title)
+
+    fig.update_xaxes(title=x_axis_label, range=xrange)
+    fig.update_yaxes(title=y_axis_label, range=yrange)
 
     return fig
 
@@ -267,7 +292,7 @@ def update_xrd_pattern(foldername, clickData, xrange, yrange):
         xrd_filename = clickData["points"][0]["text"]
 
     # print(foldername, x_pos, y_pos)
-    fig = xrd.read_xrd_pattern(foldername, xrd_filename, x_pos, y_pos)
+    fig = xrd.plot_xrd_pattern(foldername, xrd_filename, x_pos, y_pos)
 
     fig.update_layout(
         height=650,

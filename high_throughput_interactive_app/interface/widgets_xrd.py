@@ -11,6 +11,23 @@ from itertools import count, takewhile
 
 
 def frange(start, stop, step):
+    """
+    frange(start, stop, step) -> generator
+
+    Generate a sequence of numbers over a specified range.
+    Like the built-in range() function, but returns a generator
+    instead of a list. Used for floating-point ranges.
+
+    Parameters
+    ----------
+        start (int or float): The first number in the sequence.
+        stop (int or float): The sequence stops before this number.
+        step (int or float): The difference between each number in the sequence.
+
+    Returns
+    ----------
+        The next number in the sequence.
+    """
     return takewhile(lambda x: x < stop, count(start, step))
 
 
@@ -64,6 +81,19 @@ class WidgetsXRD:
     xrd_heatmap_className = "xrd_heatmap_plot_cell"
 
     def __init__(self):
+        """
+        Initialization of the XRD widgets.
+
+        Creates all the components needed for the XRD interactive tab:
+        - Folderpath dropdown
+        - Browse button
+        - Slider Xrange
+        - Slider Yrange
+        - Colorange for heatmap
+        - Dropdown for data type
+        - XRD spectra graph
+        - XRD heatmap
+        """
         # Folderpath for the xrd pattern
         self.folderpath = html.Div(
             children=[
@@ -181,6 +211,19 @@ class WidgetsXRD:
         )
 
     def get_children(self, className_moke="grid_layout_xrd"):
+        """
+        Return a Div containing all the components of the XRD widget.
+
+        Parameters
+        ----------
+        className_moke : str, optional
+            The className of the Div. Defaults to "grid_layout_xrd".
+
+        Returns
+        -------
+        children : Dash Div
+            A Div containing all the components of the XRD widget.
+        """
         children = html.Div(
             [
                 self.folderpath,
@@ -204,6 +247,26 @@ class WidgetsXRD:
         value_xrd="xrd",
         className_xrd="grid_layout_xrd",
     ):
+        """
+        Return a dcc.Tab containing all the components of the XRD widget.
+
+        Parameters
+        ----------
+        id_xrd : str, optional
+            The id of the dcc.Tab. Defaults to "xrd".
+        label_xrd : str, optional
+            The label of the dcc.Tab. Defaults to "XRD".
+        value_xrd : str, optional
+            The value of the dcc.Tab. Defaults to "xrd".
+        className_xrd : str, optional
+            The className of the Div containing all the components of the XRD widget.
+            Defaults to "grid_layout_xrd".
+
+        Returns
+        -------
+        xrd_tab : dcc.Tab
+            A dcc.Tab containing all the components of the XRD widget.
+        """
         xrd_tab = dcc.Tab(
             id=id_xrd,
             label=label_xrd,
