@@ -215,7 +215,24 @@ def calculate_field_adjusted(pulse_data, adjust_to_max, max_field):
 
 
 def adjust_magnetization(magnetization_data, ranges, avg_sum):
-    # Calculate Mr for specified ranges and adjust magnetization data
+    # Calculate kerr rotation for specified ranges and adjust magnetization data
+    """
+    Adjust magnetization data
+
+    Parameters
+    ----------
+    magnetization_data : LIST
+        Magnetization data from MOKE
+    ranges : LIST
+        List of tuples of start and end indices to calculate Kerr rotation
+    avg_sum : FLOAT
+        Average reflectivity
+
+    Returns
+    -------
+    adjusted_magnetization_data : LIST
+        Adjusted magnetization data
+    """
     Mr = [np.mean(magnetization_data[range[0] - 1 : range[1] + 1]) for range in ranges]
 
     return np.concatenate(
@@ -230,6 +247,29 @@ def calculate_field_values(
     mag_values, pul_values, sum_values, pulse_volt, coil_factor=0.92667
 ):
     # Convert from Applied Voltage to Applied Field with calibration coefficient (coil_factor)
+    """
+    Convert from Applied Voltage to Applied Field with calibration coefficient (coil_factor)
+
+    Parameters
+    ----------
+    mag_values : LIST
+        Magnetization data from MOKE
+    pul_values : LIST
+        Pulse field emitted by the coil in sMOKE
+    sum_values : LIST
+        Sum of reflectivity measured by sMOKE
+    pulse_volt : INT
+        Voltage applied to the coil in sMOKE
+    coil_factor : FLOAT, optional
+        Calibration coefficient for the coil, by default 0.92667
+
+    Returns
+    -------
+    field_values : LIST
+        Applied field from pulse data
+    corr_mag_values : LIST
+        Adjusted magnetization data
+    """
     max_field = coil_factor * int(pulse_volt) / 100
     avg_sum = np.mean(sum_values)
 
@@ -247,6 +287,22 @@ def calculate_field_values(
 
 
 def extract_coercivity(field_values, corr_mag_values):
+    """
+    Extract coercivity from MOKE loop by taking the minimum of the field values at both sides of the loop
+    (and do the mean of the absolute value of both minimums)
+
+    Parameters
+    ----------
+    field_values : LIST
+        Field values from sMOKE
+    corr_mag_values : LIST
+        Adjusted magnetization values from sMOKE
+
+    Returns
+    -------
+    coercivity : FLOAT
+        Coercivity value extracted from the data
+    """
     coercivity1, coercivity2 = [], []
     min_1 = np.min(np.abs(corr_mag_values[356:654]))
     min_2 = np.min(np.abs(corr_mag_values[1356:1664]))
@@ -261,6 +317,27 @@ def extract_coercivity(field_values, corr_mag_values):
 
 
 def plot_moke_data(foldername, subfolder, x_pos, y_pos, moke_path="./data/MOKE/"):
+    """
+    Function to plot the data from the MOKE measurement of the given foldername, subfolder, x position and y position
+
+    Parameters
+    ----------
+    foldername : STR
+        Folder containing the data
+    subfolder : STR
+        Subfolder containing the data
+    x_pos : INT
+        X position of the measurement
+    y_pos : INT
+        Y position of the measurement
+    moke_path : STR, optional
+        Path to the MOKE data, by default "./data/MOKE/"
+
+    Returns
+    -------
+    fig : plotly.graph_objects.Figure
+        Figure object with the plot
+    """
     fullpath = f"{moke_path}{foldername}/{subfolder}/"
     empty_fig = go.Figure(data=go.Scatter())
 
@@ -293,6 +370,21 @@ def plot_moke_data(foldername, subfolder, x_pos, y_pos, moke_path="./data/MOKE/"
 
 
 def make_filenames_from_magfile(fullpath, magfile):
+    """
+    Create the 3 datafiles path from a given magnetization datafile name
+
+    Parameters
+    ----------
+    fullpath : STR
+        Path to the MOKE data
+    magfile : STR
+        Name of the magnetization datafile
+
+    Returns
+    -------
+    datafiles_path : LIST
+        List containing the path of the magnetization, pulse and sum datafiles
+    """
     data_mag = fullpath + magfile
     data_pul = fullpath + magfile.replace("magnetization", "pulse")
     data_sum = fullpath + magfile.replace("magnetization", "sum")
@@ -301,12 +393,47 @@ def make_filenames_from_magfile(fullpath, magfile):
 
 
 def get_coordinates_from_name(filename):
+    """
+    Get the coordinates from a given filename in the MOKE data.
+
+    The filename is expected to have the format "magnetization_x_y.dat" where x and y are the coordinates.
+    The function returns a list containing the coordinates as strings.
+
+    Parameters
+    ----------
+    filename : STR
+        The filename to extract the coordinates from
+
+    Returns
+    -------
+    coordinates : LIST
+        List containing the coordinates as strings
+    """
     return [
         pos.translate({ord(i): None for i in "xy"}) for pos in filename.split("_")[1:3]
     ]
 
 
 def smoothData(field_values, corr_mag_values, polyorder=3):
+    """
+    Smooth the data using Savitzky-Golay filter.
+
+    Parameters
+    ----------
+    field_values : LIST
+        List containing the field values
+    corr_mag_values : LIST
+        List containing the corrected magnetization values
+    polyorder : INT, optional
+        Order of the polynomial used in the Savitzky-Golay filter, by default 3
+
+    Returns
+    -------
+    field_values : LIST
+        Smoothed field values
+    corr_mag_values : LIST
+        Smoothed corrected magnetization values
+    """
     field_values = signal.savgol_filter(field_values, 12, 10 - polyorder)
     corr_mag_values = signal.savgol_filter(corr_mag_values, 12, 10 - polyorder)
 
@@ -314,6 +441,27 @@ def smoothData(field_values, corr_mag_values, polyorder=3):
 
 
 def plot_moke_coercivity(foldername, subfolder, x_pos, y_pos, moke_path="./data/MOKE/"):
+    """
+    Plot a single MOKE loop with coercivity and reflectivity values at given position (x, y).
+
+    Parameters
+    ----------
+    foldername : STR
+        Name of the folder containing the data
+    subfolder : STR
+        Name of the subfolder
+    x_pos : INT
+        X coordinate of the loop to plot
+    y_pos : INT
+        Y coordinate of the loop to plot
+    moke_path : STR, optional
+        Path to the data folder, by default "./data/MOKE/"
+
+    Returns
+    -------
+    fig : go.Figure
+        The plotly figure object
+    """
     fullpath = f"{moke_path}{foldername}/{subfolder}/"
     empty_fig = go.Figure(data=go.Scatter())
 
@@ -361,6 +509,27 @@ def plot_moke_coercivity(foldername, subfolder, x_pos, y_pos, moke_path="./data/
 
 
 def plot_1D_with_datatype(foldername, subfolder, x_pos, y_pos, data_type):
+    """
+    Plot 1D MOKE data or coercivity depending on the data type.
+
+    Parameters
+    ----------
+    foldername : str
+        Name of the folder containing the data
+    subfolder : str
+        Name of the subfolder
+    x_pos : int
+        X coordinate of the loop to plot
+    y_pos : int
+        Y coordinate of the loop to plot
+    data_type : str
+        Type of data to plot. "Magnetic properties" or "Raw MOKE data"
+
+    Returns
+    -------
+    fig : go.Figure
+        The plotly figure object
+    """
     fig = go.Figure(data=go.Scatter())
 
     if data_type == "Magnetic properties":
@@ -371,6 +540,20 @@ def plot_1D_with_datatype(foldername, subfolder, x_pos, y_pos, data_type):
 
 
 def generate_moke_heatmap(fullpath):
+    """
+    Generate the heatmap data from the moke data in the given folder.
+
+    Parameters
+    ----------
+    fullpath : str
+        The path to the folder containing the moke data
+
+    Returns
+    -------
+    data_list : list
+        A 2D array containing the coercivity and reflectivity at each position.
+        Each row of the 2D array is a list containing the x position, y position, coercivity and reflectivity.
+    """
     pulse_voltage, data_range = read_info(fullpath)
     data_list = []
 
@@ -392,6 +575,23 @@ def generate_moke_heatmap(fullpath):
 
 
 def save_moke_heatmap(fullpath, data_list, suffix="_MOKE.dat"):
+    """
+    Save the moke heatmap data to a file.
+
+    Parameters
+    ----------
+    fullpath : str
+        The path to the folder containing the moke data
+    data_list : list
+        A 2D array containing the coercivity and reflectivity at each position.
+        Each row of the 2D array is a list containing the x position, y position, coercivity and reflectivity.
+    suffix : str, optional
+        The suffix to add to the filename, by default "_MOKE.dat"
+
+    Returns
+    -------
+    None
+    """
     filepath = f"{fullpath}{suffix}"
     header = f"x_pos\ty_pos\tCoercivity (T)\tReflectivity (V)\n"
 
@@ -414,6 +614,23 @@ def save_moke_heatmap(fullpath, data_list, suffix="_MOKE.dat"):
 
 
 def read_heatmap(datapath, suffix="_MOKE.dat"):
+    """
+    Read a heatmap file and return the header and data.
+
+    Parameters
+    ----------
+    datapath : str
+        The path to the folder containing the heatmap file
+    suffix : str, optional
+        The suffix to add to the filename, by default "_MOKE.dat"
+
+    Returns
+    -------
+    header : list
+        A list containing the column names
+    data : 2D array
+        A 2D array containing the data
+    """
     filepath = f"{datapath}{suffix}"
 
     with open(filepath, "r") as datafile:
@@ -430,6 +647,29 @@ def plot_moke_heatmap(
     moke_path="./data/MOKE/",
     result_moke_path="./results/MOKE/",
 ):
+    """
+    Plot a heatmap of MOKE data.
+
+    Parameters
+    ----------
+    foldername : str
+        Name of the folder containing the MOKE data files.
+    subfolder : str
+        Name of the subfolder containing the data files.
+    datatype : str
+        Type of data to plot. default, plot raw MOKE data.
+    moke_path : str, optional
+        Path to the folder containing the MOKE data files. Defaults to "./data/MOKE/".
+    result_moke_path : str, optional
+        Path to the folder containing the results. Defaults to "./results/MOKE/".
+
+    Returns
+    -------
+    fig : plotly.graph_objects.Figure
+        A figure object containing a Heatmap plot of the MOKE data.
+    header_data : str
+        The column name of the data that was plotted.
+    """
     fullpath = f"{moke_path}{foldername}/{subfolder}/"
     datapath = f"{result_moke_path}{subfolder}"
     empty_fig = go.Figure(data=go.Heatmap())

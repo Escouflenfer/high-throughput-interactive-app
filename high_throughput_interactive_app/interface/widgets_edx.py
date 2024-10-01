@@ -42,6 +42,18 @@ class WidgetsEDX:
 
     def __init__(self):
         # Folderpath for the EDX spetras
+        """
+        Initialization of the EDX widgets.
+
+        Creates all the components needed for the EDX interactive tab:
+        - Folderpath dropdown
+        - Element dropdown
+        - Slider Xrange
+        - Slider Yrange
+        - Colorange for heatmap
+        - EDX spectra graph
+        - EDX heatmap
+        """
         self.folderpath = html.Div(
             children=[
                 html.Label("Folderpath"),
@@ -149,6 +161,26 @@ class WidgetsEDX:
         value_edx="edx",
         className_edx="grid_layout_edx",
     ):
+        """
+        Return a dcc.Tab containing all the components of the EDX widget.
+
+        Parameters
+        ----------
+        id_edx : str, optional
+            The id of the dcc.Tab. Defaults to "edx".
+        label_edx : str, optional
+            The label of the dcc.Tab. Defaults to "EDX".
+        value_edx : str, optional
+            The value of the dcc.Tab. Defaults to "edx".
+        className_edx : str, optional
+            The className of the Div containing all the components of the EDX widget.
+            Defaults to "grid_layout_edx".
+
+        Returns
+        -------
+        edx_tab : dcc.Tab
+            A dcc.Tab containing all the components of the EDX widget.
+        """
         edx_tab = dcc.Tab(
             id=id_edx,
             label=label_edx,

@@ -209,6 +209,20 @@ def read_from_lst(lst_file_path, x_pos, y_pos):
 
 
 def save_refinement_results(foldername, result_xrd_path, header, rr_output):
+    """
+    Save the refinement results in a file named <foldername>_RR_maps.dat in the result_xrd_path folder.
+
+    Parameters
+    ----------
+    foldername : str
+        Name of the folder containing the XRD data files.
+    result_xrd_path : str
+        Path to the folder containing the refinement results files.
+    header : str
+        The header string containing all the column names.
+    rr_output : list
+        List containing the refinement results (R factors, phase name, lattice parameters and their errors).
+    """
     save_result_file = pathlib.Path(result_xrd_path + foldername + "_RR_maps.dat")
 
     with open(save_result_file, "w") as file:
@@ -245,7 +259,26 @@ def result_file_exists(foldername, result_xrd_path):
 def get_refinement_results(
     foldername, xrd_path="./data/XRD/", result_xrd_path="./results/XRD/"
 ):
+    """
+    Read the refinement results files and return the header.
 
+    If the refinement results file does not exist in the result_xrd_path folder,
+    it will read the .lst files, get the refined lattice parameters and save them in the result_xrd_path folder.
+
+    Parameters
+    ----------
+    foldername : str
+        Name of the folder containing the XRD data files.
+    xrd_path : str, optional
+        Path to the folder containing the XRD data files. Defaults to "./data/XRD/".
+    result_xrd_path : str, optional
+        Path to the folder containing the refinement results files. Defaults to "./results/XRD/".
+
+    Returns
+    -------
+    list
+        List containing the header of the refinement results file.
+    """
     if not result_file_exists(foldername, result_xrd_path):
         save_list = []
         x_pos, y_pos, xrd_filename = read_xrd_files(foldername)
@@ -272,6 +305,23 @@ def get_refinement_results(
 
 
 def get_refined_parameter(foldername, datatype, result_xrd_path):
+    """
+    Read the refinement results files and return the coordinates and refined lattice parameters values.
+
+    Parameters
+    ----------
+    foldername : str
+        Name of the folder containing the XRD data files.
+    datatype : str
+        Type of data to plot. default, plot raw XRD data.
+    result_xrd_path : str
+        Path to the folder containing the refinement results files.
+
+    Returns
+    -------
+    x_pos, y_pos, z_values : list
+        List containing the x and y coordinates of the data files and the refined lattice parameters values.
+    """
     x_pos, y_pos, z_values = [], [], []
 
     if datatype != "Raw XRD data" and datatype is not None:
@@ -373,10 +423,15 @@ def plot_xrd_heatmap(
         )
         if z_values is None:
             return empty_fig
+        z_values = [zs * 10 for zs in z_values]
 
     fig = go.Figure(
         data=go.Heatmap(
-            x=x_pos, y=y_pos, z=z_values, text=xrd_filename, colorscale="Jet"
+            x=x_pos,
+            y=y_pos,
+            z=z_values,
+            text=xrd_filename,
+            colorscale="Jet",
         )
     )
     fig.update_layout(title=f"XRD map for {foldername}")

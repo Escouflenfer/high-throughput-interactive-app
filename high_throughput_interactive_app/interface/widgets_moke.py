@@ -70,6 +70,19 @@ class WidgetsMOKE:
 
     def __init__(self):
         # Folderpath for the MOKE loop
+        """
+        Initialization of the MOKE widgets.
+
+        Creates all the components needed for the MOKE interactive tab:
+        - Folderpath dropdown
+        - Subfolder dropdown
+        - Slider Xrange
+        - Slider Yrange
+        - Colorange for heatmap
+        - Dropdown for data type
+        - MOKE spectra graph
+        - MOKE heatmap
+        """
         self.folderpath = html.Div(
             children=[
                 html.Label(self.folderpath_label),
@@ -191,6 +204,13 @@ class WidgetsMOKE:
         )
 
     def set_properties_to_magnetic(self):
+        """
+        Modify the properties of the sliders to fit the magnetic properties.
+
+        Slider Xrange will be used for the applied field (T).
+        Slider Yrange will be used for the MOKE signal (V).
+        Slider Crange will be used for the coercitivity (T).
+        """
         self.crange_slider_label = "Coercivity (T)"
         self.crange_slider_min = 0
         self.crange_slider_max = 10
@@ -216,6 +236,15 @@ class WidgetsMOKE:
         return None
 
     def set_properties_to_raw(self):
+        """
+        Modify the properties of the sliders with the raw data.
+
+        Slider Xrange will be used for the time (s).
+        Slider Yrange will be used for the Kerr Rotation (deg).
+        Slider Crange will be used for the reflectivity (V).
+
+        Re-initialize the component attributes after changing the base attributes.
+        """
         self.crange_slider_label = "Reflectivity (V)"
         self.crange_slider_min = 0
         self.crange_slider_max = 5
@@ -239,6 +268,19 @@ class WidgetsMOKE:
         return None
 
     def get_children(self, className_moke="grid_layout_moke"):
+        """
+        Return a Div containing all the components of the MOKE widget.
+
+        Parameters
+        ----------
+        className_moke : str, optional
+            The className of the Div. Defaults to "grid_layout_moke".
+
+        Returns
+        -------
+        children : Dash Div
+            A Div containing all the components of the MOKE widget.
+        """
         children = html.Div(
             [
                 self.folderpath,
@@ -262,6 +304,26 @@ class WidgetsMOKE:
         value_moke="moke",
         className_moke="grid_layout_moke",
     ):
+        """
+        Return a dcc.Tab containing all the components of the MOKE widget.
+
+        Parameters
+        ----------
+        id_moke : str, optional
+            The id of the dcc.Tab. Defaults to "moke".
+        label_moke : str, optional
+            The label of the dcc.Tab. Defaults to "MOKE".
+        value_moke : str, optional
+            The value of the dcc.Tab. Defaults to "moke".
+        className_moke : str, optional
+            The className of the Div containing all the components of the MOKE widget.
+            Defaults to "grid_layout_moke".
+
+        Returns
+        -------
+        moke_tab : dcc.Tab
+            A dcc.Tab containing all the components of the MOKE widget.
+        """
         moke_tab = dcc.Tab(
             id=id_moke,
             label=label_moke,

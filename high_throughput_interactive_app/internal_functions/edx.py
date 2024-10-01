@@ -45,6 +45,21 @@ def make_path_name(
 
 
 def create_result_list(element_list, results_ext):
+    """
+    Create a list of tuples containing the element name and the concentration in atomic percent.
+
+    Parameters
+    ----------
+    element_list : LIST
+        List of tuples containing the element number and the corresponding element name.
+    results_ext : LIST
+        List of lists containing the results of the EDX analysis.
+
+    Returns
+    -------
+    result_list : LIST
+        List of tuples containing the element name and the concentration in atomic percent.
+    """
     result_list = []
 
     for i, elm in enumerate(results_ext):

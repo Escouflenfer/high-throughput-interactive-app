@@ -202,6 +202,8 @@ def update_xrd_heatmap(foldername, datatype):
     fig.update_xaxes(title="X Position")
     fig.update_yaxes(title="Y Position")
 
+    fig.data[0].colorbar = dict(title="Lattice (Å)")
+
     return fig
 
 
@@ -274,6 +276,7 @@ def update_moke_data(foldername, subfolder, clickData, xrange, yrange, data_type
     return fig
 
 
+#   XRD pattern
 @callback(
     Output(children_xrd.xrd_pattern_id, "figure"),
     Input(children_xrd.folderpath_id, "value"),
