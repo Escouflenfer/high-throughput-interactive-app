@@ -425,7 +425,7 @@ def smoothData(field_values, corr_mag_values, polyorder=3):
     corr_mag_values : LIST
         List containing the corrected magnetization values
     polyorder : INT, optional
-        Order of the polynomial used in the Savitzky-Golay filter, by default 3
+        Order of the polynomial used in the Savitzky-Golay filter, by default 3 (needs to be odd number)
 
     Returns
     -------
