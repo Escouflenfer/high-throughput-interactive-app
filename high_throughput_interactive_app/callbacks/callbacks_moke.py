@@ -7,6 +7,7 @@ Internal use for Institut Néel and within the MaMMoS project, to export and rea
 
 from dash import Input, Output, callback
 from functions import moke
+from interface import widgets_moke
 
 
 def callbacks_moke(app, children_moke):

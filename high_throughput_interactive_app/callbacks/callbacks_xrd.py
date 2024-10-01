@@ -7,6 +7,7 @@ Internal use for Institut Néel and within the MaMMoS project, to export and rea
 
 from dash import Input, Output, callback
 from functions import xrd
+from interface import widgets_xrd
 
 
 def callbacks_xrd(app, children_xrd):

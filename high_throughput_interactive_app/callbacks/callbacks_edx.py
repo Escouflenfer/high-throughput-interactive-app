@@ -7,6 +7,7 @@ Internal use for Institut Néel and within the MaMMoS project, to export and rea
 
 from dash import Input, Output, callback
 from functions import edx
+from interface import widgets_edx
 
 
 def callbacks_edx(app, children_edx):
