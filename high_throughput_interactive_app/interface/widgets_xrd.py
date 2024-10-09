@@ -56,7 +56,7 @@ class WidgetsXRD:
     yrange_slider_min = -25000
     yrange_slider_max = 200000
     yrange_slider_step = 1000
-    yrange_slider_value = [0, 10000]
+    yrange_slider_value = [-4000, 30000]
     yrange_slider_markStep = 25000
     yrange_slider_className = "xrd_cell23"
 

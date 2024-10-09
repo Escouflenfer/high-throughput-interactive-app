@@ -23,7 +23,10 @@ def callbacks_xrd(app, children_xrd):
         )
 
         if refinement_options is not False:
-            return (["Raw XRD data"] + refinement_options), "Raw XRD data"
+            display_options = [
+                option for option in refinement_options if not option.endswith("_err")
+            ]
+            return (["Raw XRD data"] + display_options), "Raw XRD data"
         else:
             return ["Raw XRD data"], "Raw XRD data"
 
@@ -41,7 +44,13 @@ def callbacks_xrd(app, children_xrd):
         fig.update_xaxes(title="X Position")
         fig.update_yaxes(title="Y Position")
 
-        fig.data[0].colorbar = dict(title="Lattice (Å)")
+        if datatype == "Raw XRD data":
+            title = "None"
+        elif datatype.startswith("Q"):
+            title = "Wgt. frac. (%)"
+        else:
+            title = "Lattice (Å)"
+        fig.data[0].colorbar = dict(title=title)
 
         return fig
 
@@ -49,11 +58,13 @@ def callbacks_xrd(app, children_xrd):
     @callback(
         Output(children_xrd.xrd_pattern_id, "figure"),
         Input(children_xrd.folderpath_id, "value"),
+        Input(children_xrd.data_type_id, "value"),
+        Input(children_xrd.data_type_id, "options"),
         Input(children_xrd.xrd_heatmap_id, "clickData"),
         Input(children_xrd.xrange_slider_id, "value"),
         Input(children_xrd.yrange_slider_id, "value"),
     )
-    def update_xrd_pattern(foldername, clickData, xrange, yrange):
+    def update_xrd_pattern(foldername, datatype, options, clickData, xrange, yrange):
         if clickData is None:
             x_pos, y_pos = 0, 0
             xrd_filename = "Areamap_009009.ras"
@@ -64,7 +75,9 @@ def callbacks_xrd(app, children_xrd):
             xrd_filename = clickData["points"][0]["text"]
 
         # print(foldername, x_pos, y_pos)
-        fig = xrd.plot_xrd_pattern(foldername, xrd_filename, x_pos, y_pos)
+        fig = xrd.plot_xrd_pattern(
+            foldername, datatype, options, xrd_filename, x_pos, y_pos
+        )
 
         fig.update_layout(
             height=650,

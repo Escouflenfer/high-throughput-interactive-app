@@ -43,7 +43,9 @@ def create_coordinate_map(folderpath, prefix="Areamap", suffix=".ras"):
     return pos_list
 
 
-def plot_xrd_pattern(foldername, xrd_filename, x_pos, y_pos, xrd_path="./data/XRD/"):
+def plot_xrd_pattern(
+    foldername, datatype, options, xrd_filename, x_pos, y_pos, xrd_path="./data/XRD/"
+):
     """
     Read an XRD pattern file and return a figure object.
 
@@ -51,6 +53,8 @@ def plot_xrd_pattern(foldername, xrd_filename, x_pos, y_pos, xrd_path="./data/XR
     ----------
     foldername : str
         Name of the folder containing the XRD data files.
+    datatype : str
+        Type of data to plot. default is raw XRD data.
     xrd_filename : str
         Name of the XRD data file.
     x_pos : int
@@ -65,34 +69,70 @@ def plot_xrd_pattern(foldername, xrd_filename, x_pos, y_pos, xrd_path="./data/XR
     fig : plotly.graph_objects.Figure
         A figure object containing a Scatter plot of the XRD data.
     """
+    marker_colors = ["green", "red", "blue", "orange", "purple", "pink", "yellow"]
+    names = (
+        ["Counts", "Calculated", "Background"]
+        + [option for option in options if option.startswith("Q")]
+        + ["Amorphous Ta"]
+    )
+
     empty_fig = go.Figure(data=go.Heatmap())
     empty_fig.update_layout(height=600, width=600)
     if foldername is None:
         return empty_fig
 
+    # print(datatype, xrd_filename)
     fullpath = xrd_path + foldername + "/" + xrd_filename
     xrd_data = []
-    try:
-        with open(fullpath, "r", encoding="iso-8859-1") as file:
-            for line in file:
-                if not line.startswith("*"):
-                    theta, counts, error = line.split()
-                    xrd_data.append([float(theta), float(counts), float(error)])
+    error = go.Scatter()
 
-    except FileNotFoundError:
-        print(f"{fullpath} xrd file not found !")
-        return empty_fig
+    if datatype == "Raw XRD data":
+        try:
+            with open(fullpath, "r", encoding="iso-8859-1") as file:
+                for line in file:
+                    if not line.startswith("*"):
+                        theta, counts, error = line.split()
+                        xrd_data.append([float(theta), float(counts)])
 
+        except FileNotFoundError:
+            print(f"{fullpath} ras file not found !")
+            return empty_fig
+
+    else:
+        fullpath = fullpath.replace(".ras", ".dia")
+        try:
+            with open(fullpath, "r", encoding="iso-8859-1") as file:
+                file_header = next(file)
+                for line in file:
+                    data_line = line.split()
+                    xrd_data.append([float(elm) for elm in data_line])
+
+        except FileNotFoundError:
+            print(f"{fullpath} dia file not found !")
+            return empty_fig
+
+    xrd_data = np.array(xrd_data)
     fig = go.Figure(
         data=[
             go.Scatter(
-                x=[theta[0] for theta in xrd_data],
-                y=[counts[1] for counts in xrd_data],
-                marker_color="green",
-                name="Counts",
+                x=[x for x in xrd_data[:, 0]],
+                y=[y for y in xrd_data[:, i + 1]],
+                marker_color=marker_colors[i],
+                name=names[i],
             )
+            for i in range(xrd_data.shape[1] - 1)
         ]
     )
+    if datatype != "Raw XRD data":
+        error = go.Scatter(
+            x=xrd_data[:, 0],
+            y=[
+                (exp - calc) - 2000 for exp, calc in zip(xrd_data[:, 1], xrd_data[:, 2])
+            ],
+            marker_color="gray",
+            name="Error",
+        )
+        fig.add_trace(error)
 
     return fig
 
@@ -169,7 +209,7 @@ def read_from_lst(lst_file_path, x_pos, y_pos):
                     FIT_RR_OUTPUT.append(elm.strip())
             elif line.startswith("Local parameters and GOALs for phase"):
                 current_phase = line.split()[-1]
-                phases.append(current_phase)
+                # phases.append(current_phase)
                 # name of the current phase for the refined lattice parameters
                 FIT_RR_OUTPUT.append(current_phase)
             elif (
@@ -193,18 +233,19 @@ def read_from_lst(lst_file_path, x_pos, y_pos):
                 DATA_RR_OUTPUT.append(lattice[1].rstrip())
 
             # extracting volume fractions now (but is actually found first in the .lst file)
-            else:
-                for k, elmt in enumerate(phases):
-                    # same stuff, getting volume fraction values, format can be 'QNd2Fe14B=0.456789' for example
-                    if line.startswith("Q" + elmt):
-                        FIT_RR_OUTPUT.append(line.strip())
-                        if "+-" in line:
-                            fraction = line.split("=")[1].split("+-")
-                        else:
-                            fraction = [line.split("=")[1].rstrip(), "0.000000"]
-                        header_lst += f"Q{elmt}\tQ{elmt}_err\t"
-                        DATA_RR_OUTPUT.append(fraction[0])
-                        DATA_RR_OUTPUT.append(fraction[1].rstrip())
+
+            # same stuff, getting volume fraction values, format can be 'QNd2Fe14B=0.456789' for example
+            elif line.startswith("Q"):
+                elmt = (line.split("=")[0].strip()).split("Q")[-1]
+                FIT_RR_OUTPUT.append(line.strip())
+                if "+-" in line:
+                    fraction = line.split("=")[1].split("+-")
+                else:
+                    fraction = [line.split("=")[1].rstrip(), "0.000000"]
+                header_lst += f"Q{elmt}\tQ{elmt}_err\t"
+
+                DATA_RR_OUTPUT.append(fraction[0])
+                DATA_RR_OUTPUT.append(fraction[1].rstrip())
     return header_lst, DATA_RR_OUTPUT, FIT_RR_OUTPUT
 
 
@@ -304,7 +345,9 @@ def get_refinement_results(
     return header
 
 
-def get_refined_parameter(foldername, datatype, result_xrd_path):
+def get_refined_parameter(
+    foldername, datatype, xrd_path="./data/XRD/", result_xrd_path="./results/XRD/"
+):
     """
     Read the refinement results files and return the coordinates and refined lattice parameters values.
 
@@ -375,7 +418,7 @@ def check_xrd_refinement(
     # Check if refinement files exist
     lst_files = [file for file in os.listdir(fullpath) if file.endswith(".lst")]
     if len(lst_files) > 0:
-        options = get_refinement_results(foldername, xrd_path, result_xrd_path)[2:-1]
+        options = get_refinement_results(foldername, xrd_path, result_xrd_path)[2:]
         return options
 
     return False
@@ -413,22 +456,40 @@ def plot_xrd_heatmap(
     if foldername is None:
         return empty_fig
 
-    x_pos, y_pos, xrd_filename = read_xrd_files(foldername, xrd_path)
+    x_pos_file, y_pos_file, xrd_filename = read_xrd_files(foldername, xrd_path)
+    coordinate_list = [[x, y] for x, y in zip(x_pos_file, y_pos_file)]
 
     if datatype is None or datatype == "Raw XRD data":
-        z_values = np.zeros(len(x_pos) + len(y_pos))
+        z_values = np.zeros(len(x_pos_file) + len(y_pos_file))
     else:
         x_pos, y_pos, z_values = get_refined_parameter(
             foldername, datatype, result_xrd_path
         )
+        coordinate_list = [[x, y] for x, y in zip(x_pos, y_pos)]
+        filename_list = []
+        for i, filename in enumerate(xrd_filename):
+            try:
+                coordinate_list.index([x_pos_file[i], y_pos_file[i]])
+                filename_list.append(filename)
+            except ValueError:
+                continue
+
+        xrd_filename = filename_list
+
+        # Check if the function did find the refined parameters file.
         if z_values is None:
             return empty_fig
-        z_values = [zs * 10 for zs in z_values]
+        elif datatype.startswith("Q"):
+            # To have the result in %
+            z_values = [zs * 100 for zs in z_values]
+        else:
+            # To have the result in A
+            z_values = [zs * 10 for zs in z_values]
 
     fig = go.Figure(
         data=go.Heatmap(
-            x=x_pos,
-            y=y_pos,
+            x=[coord[0] for coord in coordinate_list],
+            y=[coord[1] for coord in coordinate_list],
             z=z_values,
             text=xrd_filename,
             colorscale="Jet",
