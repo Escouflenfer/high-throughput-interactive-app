@@ -5,6 +5,7 @@ Internal use for Institut Néel and within the MaMMoS project, to export and rea
 @Author: William Rigaut - Institut Néel (william.rigaut@neel.cnrs.fr)
 """
 
+import os
 import pathlib
 import numpy as np
 import plotly.graph_objects as go
@@ -39,7 +40,23 @@ def make_path_name(
     x_idx, y_idx = int((x_pos - start_x) / step_x + 1), int(
         (y_pos - start_y) / step_y + 1
     )
-    path_name = pathlib.Path(f"./data/EDX/{foldername}/Spectrum_({x_idx},{y_idx}).spx")
+
+    prefix = "Spectrum"
+    spx_files = [
+        spx_file
+        for spx_file in os.listdir(f"./data/EDX/{foldername}")
+        if spx_file.endswith(".spx")
+    ]
+
+    if len(spx_files) > 0:
+        current_spx = [
+            spx_file for spx_file in spx_files if f"({x_idx},{y_idx}).spx" in spx_file
+        ]
+    else:
+        print("Error, spx file not found")
+        return None
+
+    path_name = pathlib.Path(f"./data/EDX/{foldername}/{current_spx[0]}")
 
     return path_name
 
@@ -264,7 +281,17 @@ def get_elements(foldername, with_plot=False):
     """
 
     # Reading in .xlsx file using openpyxl library, checking if file exists, if not returns empty list
-    filepath = pathlib.Path(f"./data/EDX/{foldername}/Global spectrum results.xlsx")
+    filepath = pathlib.Path(f"./data/EDX/{foldername}")
+    xlsx_files = [
+        f for f in os.listdir(f"./data/EDX/{foldername}") if f.endswith(".xlsx")
+    ]
+    if len(xlsx_files) > 0:
+        global_results = [f for f in xlsx_files if "Global" in f or "globaux" in f]
+        if len(global_results) == 0:
+            print("Error: No Global Spectrum Results file found")
+            return []
+        else:
+            filepath = pathlib.Path(f"./data/EDX/{foldername}/{global_results[0]}")
     try:
         wb = load_workbook(filename=filepath)
     except FileNotFoundError:
